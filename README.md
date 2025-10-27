@@ -20,13 +20,13 @@ python -u .\MultiCast.py
 
 ### 1️⃣ Túnel HTTP (puerto 8000)
 
-(O con filtro para mostrar solo la URL)
 & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8000 2>&1 | Select-String -Pattern 'https://.*trycloudflare\.com' -AllMatches
+
 
 ### 2️⃣ Túnel WebSocket (puerto 8080)
 
-(O con filtro)
 & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8080 2>&1 | Select-String -Pattern 'https://.*trycloudflare\.com' -AllMatches
+
 
 ---
 
@@ -37,6 +37,7 @@ python -u .\MultiCast.py
 
 Formato:
 https://<URL_HTTP>.trycloudflare.com/index.html?ws_host=<URL_WS>.trycloudflare.com&ws_port=443
+
 
 Ejemplo:
 https://star-nine-librarian-roulette.trycloudflare.com/index.html?ws_host=avi-scope-music-gibson.trycloudflare.com&ws_port=443

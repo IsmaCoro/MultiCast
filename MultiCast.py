@@ -12,6 +12,7 @@ from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer
 import re
 
+# ----------------- Utilidades -----------------
 def get_local_ip() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -36,7 +37,6 @@ def test_port(host, port):
 def get_api_time_sync():
     API_URL = "http://worldtimeapi.org/api/timezone/Etc/UTC"
     try:
-        import requests
         response = requests.get(API_URL, timeout=5)
         response.raise_for_status()
         data = response.json()
@@ -53,6 +53,7 @@ print("\n--- Diagnóstico de puertos ---")
 print(f"Puerto HTTP 8000 disponible: {'SÍ' if test_port('0.0.0.0', 8000) else 'NO - OCUPADO'}")
 print(f"Puerto WebSocket 8080 disponible: {'SÍ' if test_port('0.0.0.0', 8080) else 'NO - OCUPADO'}")
 
+# ----------------- Configuración -----------------
 MCAST_GRP  = "224.1.1.1"
 MCAST_PORT = 5007
 IFACE_IP   = LOCAL_IP
@@ -63,8 +64,9 @@ HTTP_HOST = "0.0.0.0"
 HTTP_PORT = 8000
 USE_LOCALHOST = True
 
+# ----------------- Registro / Sesiones -----------------
 CONNECTED_CLIENTS = set()
-CLIENT_NICKS = {}  # websocket -> nickname
+CLIENT_NICKS = {}   # websocket -> nickname
 ACTIVE_NICKS = set()
 
 NICK_RE = re.compile(r"^[A-Za-zÀ-ÿ0-9 _.\-]{3,32}$")
@@ -77,6 +79,11 @@ def is_valid_nick(nick: str) -> bool:
     if not NICK_RE.fullmatch(n): return False
     return True
 
+# ----------------- Deduplicación por eco multicast -----------------
+RECENT_SENT   = {}      # dict[str, float] => {"Nick: texto": timestamp}
+RECENT_WINDOW = 5.0     # ventana de tiempo para considerar eco/duplicado
+
+# ----------------- Helpers de envío -----------------
 async def send_system(websocket, text: str):
     try:
         await websocket.send(f"Sistema: {text}")
@@ -97,6 +104,7 @@ async def broadcast_chat_line(full_line: str):
     if CONNECTED_CLIENTS:
         await asyncio.gather(*[ws.send(full_line) for ws in list(CONNECTED_CLIENTS)], return_exceptions=True)
 
+# ----------------- WebSocket handler -----------------
 async def websocket_handler(websocket):
     CONNECTED_CLIENTS.add(websocket)
     print(f"Nuevo cliente web conectado. Total: {len(CONNECTED_CLIENTS)}")
@@ -106,6 +114,7 @@ async def websocket_handler(websocket):
         async for raw in websocket:
             msg = str(raw).strip()
 
+            # 0) Handshake de registro obligatorio: "REGISTER <nick>"
             if not registered:
                 if msg.upper().startswith("REGISTER "):
                     candidate = msg[9:].strip()
@@ -119,7 +128,7 @@ async def websocket_handler(websocket):
                     CLIENT_NICKS[websocket] = nickname
                     ACTIVE_NICKS.add(nickname)
                     registered = True
-                    # Enviar token de control (para el cliente) + mensaje humano
+                    # Token de control + mensaje humano
                     await send_control(websocket, "SYSTEM:REGISTER_OK")
                     await send_system(websocket, f"Registro OK. ¡Bienvenido, {nickname}!")
                     await broadcast_system(f"{nickname} se ha unido al chat.")
@@ -129,22 +138,45 @@ async def websocket_handler(websocket):
                     await send_system(websocket, "Debes registrarte primero. Envía: REGISTER <tu_alias>")
                     continue
 
+            # 1) Comando /time
             if msg == "/time":
                 api_response = await asyncio.to_thread(get_api_time_sync)
                 await broadcast_system(api_response)
                 continue
 
+            # 2) Mensaje normal: el servidor formatea "<nick>: <texto>"
             if msg:
                 full_line = f"{nickname}: {msg}"
                 print(f"[Web -> Multicast]: {full_line}")
+
+                # a) Broadcast a websockets
                 await broadcast_chat_line(full_line)
+
+                # b) Preparar socket multicast
                 send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
                 try:
                     send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(IFACE_IP))
                 except OSError:
                     pass
+
                 ttl = struct.pack('b', 1)
                 send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+
+                # Evitar eco local de multicast (duplica mensajes en el mismo proceso)
+                try:
+                    send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
+                except OSError:
+                    pass
+
+                # --- DEDUP: MARCAR ANTES DE ENVIAR (evita carrera con el listener) ---
+                now = time.time()
+                RECENT_SENT[full_line] = now
+                # limpieza del diccionario
+                for m, ts in list(RECENT_SENT.items()):
+                    if now - ts > RECENT_WINDOW:
+                        RECENT_SENT.pop(m, None)
+
+                # c) Enviar a multicast
                 try:
                     send_sock.sendto(full_line.encode("utf-8"), (MCAST_GRP, MCAST_PORT))
                 except socket.error as e:
@@ -162,6 +194,7 @@ async def websocket_handler(websocket):
             asyncio.get_event_loop().create_task(broadcast_system(f"{old} salió del chat."))
         print(f"Cliente web desconectado. Restantes: {len(CONNECTED_CLIENTS)}")
 
+# ----------------- Multicast Listener (hilo) -----------------
 def multicast_listener():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -197,12 +230,27 @@ def multicast_listener():
         try:
             data, addr = recv_sock.recvfrom(65535)
             message = data.decode("utf-8", errors="replace")
-            asyncio.run_coroutine_threadsafe(broadcast_chat_line(message), main_loop)
+
+            # Barrera 1: si parece venir de mi propia IP, ignorar
+            if addr and addr[0] == IFACE_IP:
+                continue
+
+            # Barrera 2: si lo acabo de marcar, ignorar (eco/rebote)
+            ts = RECENT_SENT.get(message)
+            if ts is not None and (time.time() - ts) <= RECENT_WINDOW:
+                continue
+
+            # Reenviar al chat web
+            asyncio.run_coroutine_threadsafe(
+                broadcast_chat_line(message),
+                main_loop
+            )
         except socket.error as e:
             print(f"Error de socket multicast: {e}")
         except Exception as e:
             print(f"Error en listener multicast: {e}")
 
+# ----------------- HTTP estático (hilo) -----------------
 def start_static_http_server(directory: str, host: str = HTTP_HOST, port: int = HTTP_PORT):
     os.chdir(directory)
     TCPServer.allow_reuse_address = True
@@ -211,6 +259,7 @@ def start_static_http_server(directory: str, host: str = HTTP_HOST, port: int = 
         print(f"Servidor HTTP estático en http://{LOCAL_IP}:{port}/ (sirviendo {directory})")
         httpd.serve_forever()
 
+# ----------------- Arranque -----------------
 def start_http_thread(project_dir: str):
     t = threading.Thread(target=start_static_http_server, args=(project_dir, HTTP_HOST, HTTP_PORT), daemon=True)
     t.start()
@@ -221,6 +270,7 @@ def start_multicast_thread():
     t.start()
     return t
 
+# ----------------- Main -----------------
 async def main_async():
     project_dir = os.path.dirname(os.path.abspath(__file__))
 
