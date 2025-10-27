@@ -199,7 +199,8 @@ body {
 /* Composer */
 .composer {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* Modificado de 'auto 1fr auto' a 'auto 1fr auto auto' */
+  grid-template-columns: auto 1fr auto auto; 
   align-items: center;
   gap: 10px;
   padding: 12px;
@@ -207,6 +208,11 @@ body {
   border-top: 1px solid rgba(148,163,184,0.15);
   position: sticky;
   bottom: 0;
+}
+
+.composer .ghost-btn {
+  padding: 12px 14px; /* Ajusta la altura */
+  font-size: 1.2rem; /* Hace el emoji un poco más grande */
 }
 
 .me-pill {

@@ -7,6 +7,8 @@ import sys
 import os
 import webbrowser
 import time
+import requests
+import json
 from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer
 
@@ -48,6 +50,25 @@ def test_connection(host, port):
     except:
         return False
 
+def get_api_time_sync():
+    """
+    Obtiene la hora UTC desde la API de forma síncrona.
+    Se debe ejecutar en un hilo para no bloquear asyncio.
+    """
+    API_URL = "http://worldtimeapi.org/api/timezone/Etc/UTC"
+    try:
+        response = requests.get(API_URL, timeout=5) # 5s timeout
+        response.raise_for_status()
+        data = response.json()
+        
+        # Formateamos un poco la respuesta
+        utc_time_str = data['utc_datetime']
+        return f"Respuesta de la API (UTC): {utc_time_str}"
+        
+    except Exception as e:
+        print(f"[ERROR API] Fallo al contactar WorldTimeAPI: {e}")
+        return "Error: No se pudo obtener la hora de la API."
+    
 LOCAL_IP = get_local_ip()
 print(f"[INFO] IP local detectada: {LOCAL_IP}")
 
@@ -82,7 +103,7 @@ USE_LOCALHOST = True
 # Almacenamiento de clientes WebSocket
 CONNECTED_CLIENTS = set()
 
-# ----------------- WebSocket -----------------
+# --- WebSocket -----------------
 async def broadcast_to_websockets(message):
     if CONNECTED_CLIENTS:
         await asyncio.gather(
@@ -95,28 +116,51 @@ async def websocket_handler(websocket):
     print(f"Nuevo cliente web conectado. Total: {len(CONNECTED_CLIENTS)}")
     try:
         async for message in websocket:
-            print(f"[Web -> Multicast]: {message}")
-
-            # Enviar a multicast
-            send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-
-            # Forzar interfaz de envío (si es válida)
+            
+            # --- Lógica de Comandos ---
             try:
-                send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(IFACE_IP))
-            except OSError:
-                # Si falla, no forzamos interfaz; que el SO decida
-                pass
+                # Intentamos parsear "Sender: Message"
+                sender, text = message.split(': ', 1)
+            except ValueError:
+                # Si no tiene el formato, lo ignoramos
+                print(f"[WARN] Mensaje malformado: {message}")
+                continue
 
-            # TTL = 1 (solo LAN)
-            ttl = struct.pack('b', 1)
-            send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+            # 1. Comprobar si es el comando /time
+            if text.strip() == "/time":
+                print(f"[CMD] {sender} solicitó la hora (/time).")
+                
+                # Ejecutamos la llamada 'requests' (que es bloqueante) 
+                # en un hilo separado para no detener el servidor.
+                api_response = await asyncio.to_thread(get_api_time_sync)
+                
+                # Creamos un mensaje de "Sistema" con la respuesta
+                system_message = f"Sistema: {api_response}"
+                
+                # Enviamos la respuesta a TODOS los clientes web
+                await broadcast_to_websockets(system_message)
 
-            try:
-                send_sock.sendto(message.encode("utf-8"), (MCAST_GRP, MCAST_PORT))
-            except socket.error as e:
-                print(f"Error al enviar a multicast: {e}")
-            finally:
-                send_sock.close()
+            # 2. Si no es un comando, es un mensaje de chat normal
+            else:
+                print(f"[Web -> Multicast]: {message}")
+
+                # Enviar a multicast (lógica original)
+                send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                try:
+                    send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(IFACE_IP))
+                except OSError:
+                    pass
+                
+                ttl = struct.pack('b', 1)
+                send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+
+                try:
+                    send_sock.sendto(message.encode("utf-8"), (MCAST_GRP, MCAST_PORT))
+                except socket.error as e:
+                    print(f"Error al enviar a multicast: {e}")
+                finally:
+                    send_sock.close()
+            # --- Fin Lógica de Comandos ---
 
     except websockets.exceptions.ConnectionClosed:
         print("Cliente web desconectado.")

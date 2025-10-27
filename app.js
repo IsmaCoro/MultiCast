@@ -13,6 +13,7 @@ const chatWindow   = document.getElementById('chat-window');
 const messageForm  = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 const sendButton   = document.getElementById('send-button');
+const timeButton   = document.getElementById('time-button');
 const statusDot    = document.getElementById('status-dot');
 const statusText   = document.getElementById('status-text');
 const meNameEl     = document.getElementById('me-name');
@@ -48,6 +49,24 @@ messageInput.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (!sendButton.disabled) messageForm.requestSubmit();
   }
+});
+
+// Listener para el nuevo botón de hora
+timeButton.addEventListener('click', () => {
+  // Solo funciona si estamos conectados
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    alert('No se puede solicitar la hora: WebSocket no conectado.');
+    return;
+  }
+  
+  // 1. Creamos el mensaje de comando especial
+  const timeRequestMsg = `${nickname}: /time`;
+  
+  // 2. Lo enviamos al servidor
+  socket.send(timeRequestMsg);
+  
+  // 3. Opcional: enfocar el input para seguir escribiendo
+  messageInput.focus();
 });
 
 // ====== Helpers ======

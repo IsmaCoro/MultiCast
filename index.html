@@ -41,11 +41,16 @@
           type="text"
           id="message-input"
           class="input"
-          placeholder="Escribe un mensaje…"
+          placeholder="Escribe un mensaje… (o usa /time)"
           aria-label="Escribe un mensaje"
           maxlength="500"
           required
         />
+        
+        <button type="button" id="time-button" class="ghost-btn" title="Solicitar hora UTC">
+          🕒
+        </button>
+
         <button type="submit" id="send-button" class="send-btn" disabled>Enviar</button>
       </form>
     </main>
