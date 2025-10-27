@@ -11,6 +11,9 @@ import requests
 from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer
 import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 
 # ----------------- Utilidades -----------------
 def get_local_ip() -> str:
@@ -35,16 +38,59 @@ def test_port(host, port):
         return False
 
 def get_api_time_sync():
-    API_URL = "http://worldtimeapi.org/api/timezone/Etc/UTC"
+ 
+    TZ_MAIN = "America/Mexico_City"        # Puerto Vallarta usa horario del centro de MX
+    TZ_ALT  = "America/Bahia_Banderas"     # Zona adyacente (fallback)
+    URLS = [
+        f"https://worldtimeapi.org/api/timezone/{TZ_MAIN}",
+        f"https://worldtimeapi.org/api/timezone/{TZ_ALT}",
+    ]
+
+    SP_MONTHS = ["enero","febrero","marzo","abril","mayo","junio",
+                 "julio","agosto","septiembre","octubre","noviembre","diciembre"]
+    SP_WEEKDAYS = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"]
+
+    def fmt_es(dt: datetime, tzname: str) -> str:
+        wd = SP_WEEKDAYS[dt.weekday()]
+        month = SP_MONTHS[dt.month - 1]
+        return f"Hora de Puerto Vallarta: {wd} {dt.day:02d} de {month} de {dt.year} — {dt:%H:%M:%S} ({tzname})"
+
+    # 1) & 2) Intentar API pública (HTTPS)
+    for url in URLS:
+        try:
+            r = requests.get(url, timeout=5)
+            r.raise_for_status()
+            data = r.json()
+
+            # worldtimeapi trae 'datetime' (local) y 'utc_datetime' (UTC)
+            dt_iso = data.get("datetime") or data.get("utc_datetime")
+            tzname = data.get("timezone") or TZ_MAIN
+            if not dt_iso:
+                continue
+
+            # Normalizar ISO (worldtimeapi usa 'Z' a veces)
+            dt = datetime.fromisoformat(dt_iso.replace("Z", "+00:00"))
+
+            # Asegurar zona correcta
+            try:
+                dt_local = dt.astimezone(ZoneInfo(tzname))
+            except Exception:
+                dt_local = dt.astimezone(ZoneInfo(TZ_MAIN))
+                tzname = TZ_MAIN
+
+            return fmt_es(dt_local, tzname)
+        except Exception as e:
+            print(f"[ERROR API] {url} -> {e}")
+
+    # 3) Fallback sin red usando tz de sistema
     try:
-        response = requests.get(API_URL, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        utc_time_str = data['utc_datetime']
-        return f"Respuesta de la API (UTC): {utc_time_str}"
+        tz = ZoneInfo(TZ_MAIN)
+        dt_local = datetime.now(tz)
+        return fmt_es(dt_local, TZ_MAIN) + " (sin API)"
     except Exception as e:
-        print(f"[ERROR API] Fallo al contactar WorldTimeAPI: {e}")
-        return "Error: No se pudo obtener la hora de la API."
+        print(f"[ERROR Fallback] zoneinfo -> {e}")
+        return "Error: No se pudo obtener la hora de Puerto Vallarta."
+
 
 LOCAL_IP = get_local_ip()
 print(f"[INFO] IP local detectada: {LOCAL_IP}")
