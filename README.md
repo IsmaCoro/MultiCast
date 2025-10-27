@@ -1,17 +1,59 @@
-# MultiCast
+# MultiCast — Guía Rápida con Cloudflare Tunnel
 
-Contraseña
-https://loca.lt/mytunnelpassword
+## Dependencias
+pip install websockets requests
 
-Ejecutar MultiCast.py
+## Instalar Cloudflare Tunnel
+winget install Cloudflare.cloudflared
+(O descarga manual desde: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/)
 
-despues :
+---
 
-Estos se ejecutan en dos Command prompt distintas en orden(en la flecha que esta a un lado del simbolo mas selecciona Command prompt)
- 1-  lt --port 8000 --subdomain multicastdemo8000
+## Ejecutar servidor
+Abre una terminal en C:\MultiCast y ejecuta:
+python -u .\MultiCast.py
+(No cierres esta terminal mientras se usa el servidor)
 
- 2-  lt --port 8080 --subdomain multicastdemo8080
+---
 
+## Crear los túneles (en 2 terminales separadas)
 
- websockets>=12.0
-requests>=2.31.0
+### 1️⃣ Túnel HTTP (puerto 8000)
+
+(O con filtro para mostrar solo la URL)
+& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8000 2>&1 | Select-String -Pattern 'https://.*trycloudflare\.com' -AllMatches
+
+### 2️⃣ Túnel WebSocket (puerto 8080)
+
+(O con filtro)
+& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8080 2>&1 | Select-String -Pattern 'https://.*trycloudflare\.com' -AllMatches
+
+---
+
+## 🧩 Armar el enlace final (fórmula)
+⚠️ El orden importa:  
+- La URL del **puerto 8000 (HTTP)** va al inicio.  
+- La URL del **puerto 8080 (WebSocket)** va en `ws_host`.
+
+Formato:
+https://<URL_HTTP>.trycloudflare.com/index.html?ws_host=<URL_WS>.trycloudflare.com&ws_port=443
+
+Ejemplo:
+https://star-nine-librarian-roulette.trycloudflare.com/index.html?ws_host=avi-scope-music-gibson.trycloudflare.com&ws_port=443
+
+---
+
+## Verificación final
+- Mantén las 3 terminales abiertas:
+  1. Servidor → python MultiCast.py
+  2. Túnel 8000 → Cloudflare Tunnel HTTP
+  3. Túnel 8080 → Cloudflare Tunnel WebSocket
+
+- Abre el enlace final en tu navegador o compártelo.
+
+---
+
+## Notas
+- Si Cloudflare muestra “Cannot determine default origin certificate path”, ignóralo (es normal sin cuenta).  
+- Si el enlace no carga aún, espera unos segundos y recarga.  
+- Los enlaces generados expiran tras un tiempo, puedes volver a ejecutar los comandos para crear nuevos.

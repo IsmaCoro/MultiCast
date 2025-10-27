@@ -1,8 +1,6 @@
 // ====== Config dinámica (HTTP → ws, HTTPS → wss) ======
 const WS_PORT_DEFAULT = 8080;
 const WS_SCHEME = location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-// Permite overrides opcionales por querystring: ?ws_host=192.168.1.74&ws_port=8080
 const params  = new URLSearchParams(location.search);
 const WS_HOST = params.get('ws_host') || location.hostname;
 const WS_PORT = parseInt(params.get('ws_port') || WS_PORT_DEFAULT, 10);
@@ -21,16 +19,21 @@ const meInitialsEl = document.getElementById('me-initials');
 const themeToggle  = document.getElementById('theme-toggle');
 const htmlRoot     = document.documentElement;
 
-// ====== Nickname ======
-let nickname = localStorage.getItem('chat_nickname');
-if (!nickname) {
-  nickname = prompt('Por favor, ingresa tu nombre de usuario:') || 'UsuarioAnónimo';
-  localStorage.setItem('chat_nickname', nickname);
-}
-meNameEl.textContent = nickname;
-meInitialsEl.textContent = nickname.trim().charAt(0).toUpperCase() || 'U';
+// Registro (modal)
+const regBackdrop  = document.getElementById('reg-backdrop');
+const regForm      = document.getElementById('reg-form');
+const regNameInput = document.getElementById('reg-name');
+const regError     = document.getElementById('reg-error');
+// Extra: checkbox "Recordarme"
+let rememberBox = document.getElementById('reg-remember');
 
-// ====== Tema (light/dark) ======
+// ====== Estado ======
+let socket;
+let reconnectDelay = 1000;
+let nickname = null;
+let registered = false;
+
+// ====== Tema ======
 const savedTheme = localStorage.getItem('chat_theme') || 'light';
 htmlRoot.setAttribute('data-theme', savedTheme);
 themeToggle.addEventListener('click', () => {
@@ -40,46 +43,22 @@ themeToggle.addEventListener('click', () => {
   localStorage.setItem('chat_theme', next);
 });
 
-// ====== UX ======
-messageInput.addEventListener('input', () => {
-  sendButton.disabled = messageInput.value.trim().length === 0;
-});
-messageInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    if (!sendButton.disabled) messageForm.requestSubmit();
-  }
-});
-
-// Listener para el nuevo botón de hora
-timeButton.addEventListener('click', () => {
-  // Solo funciona si estamos conectados
-  if (!socket || socket.readyState !== WebSocket.OPEN) {
-    alert('No se puede solicitar la hora: WebSocket no conectado.');
-    return;
-  }
-  
-  // 1. Creamos el mensaje de comando especial
-  const timeRequestMsg = `${nickname}: /time`;
-  
-  // 2. Lo enviamos al servidor
-  socket.send(timeRequestMsg);
-  
-  // 3. Opcional: enfocar el input para seguir escribiendo
-  messageInput.focus();
-});
-
 // ====== Helpers ======
 const fmtTime = (d = new Date()) =>
   d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 function setStatus(state, text) {
-  statusDot.dataset.state = state; // 'ok' | 'warn' | 'err'
+  statusDot.dataset.state = state;
   statusText.textContent = text;
 }
 
+function setComposerEnabled(enabled) {
+  messageInput.disabled = !enabled;
+  timeButton.disabled = !enabled;
+  sendButton.disabled = !enabled || messageInput.value.trim().length === 0;
+}
+
 function displayMessage(fullMessage) {
-  // Formato esperado: "Remitente: Mensaje"
   const [sender, ...msgParts] = String(fullMessage).split(': ');
   const messageText = msgParts.join(': ');
 
@@ -118,11 +97,117 @@ function displayMessage(fullMessage) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// ====== WebSocket con reconexión ======
-let socket;
-let reconnectDelay = 1000; // 1s, 2s, 4s, ... máx 10s
+// ====== Registro obligatorio ======
+function validateNickname(name) {
+  if (!name) return false;
+  const trimmed = name.trim();
+  if (trimmed.length < 3 || trimmed.length > 32) return false;
+  if (/^usuarioan[oó]nimo$/i.test(trimmed)) return false;
+  return true;
+}
 
+function showRegistration(msg = 'Regístrate para entrar') {
+  regBackdrop.hidden = false;
+  regBackdrop.style.display = 'grid';
+  setComposerEnabled(false);
+  setStatus('warn', msg);
+  setTimeout(() => regNameInput?.focus(), 0);
+}
+
+// cierre agresivo para evitar overlays persistentes
+function closeRegistration() {
+  regBackdrop.hidden = true;
+  regBackdrop.style.display = 'none';
+  // opcional: elimina del DOM para que no interfiera con clics
+  setTimeout(() => {
+    if (regBackdrop && regBackdrop.parentNode) {
+      // comentar si prefieres mantener en DOM
+      // regBackdrop.parentNode.removeChild(regBackdrop);
+    }
+  }, 50);
+}
+
+function completeRegistration(name) {
+  nickname = name.trim();
+  registered = true;
+  if (rememberBox?.checked) {
+    localStorage.setItem('chat_nickname', nickname);
+  } else {
+    localStorage.removeItem('chat_nickname');
+  }
+  meNameEl.textContent = nickname;
+  meInitialsEl.textContent = nickname.trim().charAt(0).toUpperCase() || 'U';
+  closeRegistration();
+  setComposerEnabled(false); // se habilita tras handshake OK
+  connect();
+}
+
+// Intento reanudar sesión: NO auto-registra. Solo pre-rellena si existía.
+(function initRegistration() {
+  const stored = localStorage.getItem('chat_nickname');
+  if (stored) {
+    if (regNameInput) regNameInput.value = stored;
+    // crea la casilla recordar si no existe
+    if (!rememberBox) {
+      const cb = document.createElement('label');
+      cb.style.display = 'flex'; cb.style.alignItems = 'center'; cb.style.gap = '8px';
+      cb.innerHTML = '<input type="checkbox" id="reg-remember"> Recordarme en este navegador';
+      regForm?.insertBefore(cb, regForm.querySelector('button'));
+      rememberBox = cb.querySelector('input');
+      rememberBox.checked = true; // si ya había alias guardado, marcamos
+    }
+  } else {
+    // crear casilla si no existe
+    if (!rememberBox) {
+      const cb = document.createElement('label');
+      cb.style.display = 'flex'; cb.style.alignItems = 'center'; cb.style.gap = '8px';
+      cb.innerHTML = '<input type="checkbox" id="reg-remember"> Recordarme en este navegador';
+      regForm?.insertBefore(cb, regForm.querySelector('button'));
+      rememberBox = cb.querySelector('input');
+      rememberBox.checked = false;
+    }
+  }
+  showRegistration();
+})();
+
+regForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const candidate = regNameInput.value;
+  if (!validateNickname(candidate)) {
+    regError.hidden = false;
+    regNameInput.setAttribute('aria-invalid', 'true');
+    regNameInput.focus();
+    return;
+  }
+  regError.hidden = true;
+  regNameInput.removeAttribute('aria-invalid');
+  completeRegistration(candidate);
+});
+
+// ====== UX ======
+messageInput.addEventListener('input', () => {
+  sendButton.disabled = messageInput.value.trim().length === 0 || messageInput.disabled;
+});
+messageInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!sendButton.disabled) messageForm.requestSubmit();
+  }
+});
+
+timeButton.addEventListener('click', () => {
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    alert('No se puede solicitar la hora: WebSocket no conectado.');
+    return;
+  }
+  socket.send('/time');
+  messageInput.focus();
+});
+
+// ====== WebSocket con handshake REGISTER y token ======
 function connect() {
+  if (!registered || !nickname) return;
+
   setStatus('warn', 'Conectando…');
   try {
     console.log('[WS] Conectando a', WS_URL);
@@ -134,19 +219,41 @@ function connect() {
   }
 
   socket.onopen = () => {
-    setStatus('ok', `Conectado a ${WS_HOST}:${WS_PORT}`);
-    reconnectDelay = 1000;
-    const joinMsg = `Sistema: ${nickname} se ha unido al chat.`;
-    displayMessage(joinMsg); // local
-    socket.send(joinMsg);    // broadcast
+    setStatus('warn', 'Registrando…');
+    socket.send(`REGISTER ${nickname}`);
+    setTimeout(() => {
+      if (socket && socket.readyState === WebSocket.OPEN && messageInput.disabled) {
+        console.warn('[WS] Reintentando REGISTER…');
+        socket.send(`REGISTER ${nickname}`);
+      }
+    }, 2500);
   };
 
   socket.onmessage = (event) => {
-    displayMessage(event.data);
+    const data = String(event.data);
+    const lower = data.toLowerCase();
+
+    // preferimos token
+    if (data === 'SYSTEM:REGISTER_OK' || (lower.startsWith('sistema:') && lower.includes('registro ok'))) {
+      setStatus('ok', `Conectado como ${nickname}`);
+      setComposerEnabled(true);
+      closeRegistration();
+      return;
+    }
+
+    if (lower.startsWith('sistema:') && (lower.includes('alias inválido') || lower.includes('ya está en uso') || lower.includes('debes registrarte'))) {
+      setComposerEnabled(false);
+      showRegistration('Alias inválido o en uso. Elige otro.');
+      displayMessage(data);
+      return;
+    }
+
+    displayMessage(data);
   };
 
   socket.onclose = () => {
     setStatus('err', 'Desconectado');
+    setComposerEnabled(false);
     scheduleReconnect();
   };
 
@@ -161,16 +268,11 @@ function scheduleReconnect() {
   reconnectDelay = Math.min(reconnectDelay * 2, 10000);
 }
 
-connect();
-
-// ====== Envío ======
 messageForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const txt = messageInput.value.trim();
   if (!txt || !socket || socket.readyState !== WebSocket.OPEN) return;
-
-  const full = `${nickname}: ${txt}`;
-  socket.send(full);
+  socket.send(txt);
   messageInput.value = '';
   sendButton.disabled = true;
 });

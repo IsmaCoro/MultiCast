@@ -6,10 +6,24 @@
   <meta name="theme-color" content="#0a84ff" />
   <title>Chat Web Multicast</title>
   <link rel="stylesheet" href="styles.css" />
-  <script src="app.js" defer></script>
+  <script defer src="app.js"></script>
 </head>
 <body>
   <div id="app">
+    <!-- Modal de Registro (bloqueante) -->
+    <div id="reg-backdrop" class="modal-backdrop" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reg-title" aria-describedby="reg-desc">
+        <h2 id="reg-title">Crea tu alias para entrar</h2>
+        <p id="reg-desc" class="muted">Tu alias aparecerá junto a cada mensaje. Es obligatorio para usar el chat.</p>
+        <form id="reg-form" class="reg-form" autocomplete="off">
+          <label for="reg-name" class="label">Alias</label>
+          <input id="reg-name" name="reg-name" class="input" type="text" placeholder="Ej. Filomeno" maxlength="32" required />
+          <p id="reg-error" class="error" role="alert" hidden>El alias debe tener 3–32 caracteres y no puede ser “UsuarioAnónimo”.</p>
+          <button type="submit" class="send-btn w-full" id="reg-submit">Entrar al chat</button>
+        </form>
+      </div>
+    </div>
+
     <header class="app-header">
       <div class="brand">
         <div class="logo" aria-hidden="true">📡</div>
@@ -45,9 +59,10 @@
           aria-label="Escribe un mensaje"
           maxlength="500"
           required
+          disabled
         />
-        
-        <button type="button" id="time-button" class="ghost-btn" title="Solicitar hora UTC">
+
+        <button type="button" id="time-button" class="ghost-btn" title="Solicitar hora UTC" disabled>
           🕒
         </button>
 
