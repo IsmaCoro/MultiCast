@@ -11,3 +11,7 @@ Estos se ejecutan en dos Command prompt distintas en orden(en la flecha que esta
  1-  lt --port 8000 --subdomain multicastdemo8000
 
  2-  lt --port 8080 --subdomain multicastdemo8080
+
+
+ websockets>=12.0
+requests>=2.31.0

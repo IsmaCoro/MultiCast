@@ -1,0 +1,9 @@
+# ===== Dependencias principales =====
+websockets>=12.0
+requests>=2.31.0
+
+# ===== Asíncrono y red =====
+asyncio
+
+# ===== Opcional: soporte Cloudflare Tunnel desde Python (si lo usas en scripts) =====
+cloudflared==2024.8.0
