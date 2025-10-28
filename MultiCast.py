@@ -38,12 +38,10 @@ def test_port(host, port):
         return False
 
 def get_api_time_sync():
- 
-    TZ_MAIN = "America/Mexico_City"        # Puerto Vallarta usa horario del centro de MX
-    TZ_ALT  = "America/Bahia_Banderas"     # Zona adyacente (fallback)
+    TZ_MAIN = "America/Mexico_City"
     URLS = [
-        f"https://worldtimeapi.org/api/timezone/{TZ_MAIN}",
-        f"https://worldtimeapi.org/api/timezone/{TZ_ALT}",
+    "https://timeapi.io/api/Time/current/zone?timeZone=America/Mexico_City",
+    "https://timeapi.io/api/Time/current/zone?timeZone=America/Bahia_Banderas",
     ]
 
     SP_MONTHS = ["enero","febrero","marzo","abril","mayo","junio",
@@ -53,43 +51,63 @@ def get_api_time_sync():
     def fmt_es(dt: datetime, tzname: str) -> str:
         wd = SP_WEEKDAYS[dt.weekday()]
         month = SP_MONTHS[dt.month - 1]
-        return f"Hora de Puerto Vallarta: {wd} {dt.day:02d} de {month} de {dt.year} — {dt:%H:%M:%S} ({tzname})"
+        return f"{wd} {dt.day:02d} de {month} de {dt.year} — {dt:%H:%M:%S} ({tzname})"
 
-    # 1) & 2) Intentar API pública (HTTPS)
     for url in URLS:
         try:
             r = requests.get(url, timeout=5)
             r.raise_for_status()
             data = r.json()
+            
+            dt_iso = data.get("dateTime") or data.get("date_time") or data.get("datetime")
+            tzname = data.get("timeZone") or data.get("timezone") or TZ_MAIN
 
-            # worldtimeapi trae 'datetime' (local) y 'utc_datetime' (UTC)
-            dt_iso = data.get("datetime") or data.get("utc_datetime")
-            tzname = data.get("timezone") or TZ_MAIN
             if not dt_iso:
                 continue
 
-            # Normalizar ISO (worldtimeapi usa 'Z' a veces)
-            dt = datetime.fromisoformat(dt_iso.replace("Z", "+00:00"))
+            dt_remote = datetime.fromisoformat(dt_iso.replace("Z", "+00:00"))
+            dt_remote_local = dt_remote.astimezone(ZoneInfo(tzname))
 
-            # Asegurar zona correcta
-            try:
-                dt_local = dt.astimezone(ZoneInfo(tzname))
-            except Exception:
-                dt_local = dt.astimezone(ZoneInfo(TZ_MAIN))
-                tzname = TZ_MAIN
+            # Obtener hora local del sistema
+            dt_local = datetime.now().astimezone()
 
-            return fmt_es(dt_local, tzname)
+            # Calcular diferencia
+            diff = dt_local - dt_remote_local
+            diff_seconds = abs(diff.total_seconds())
+
+            hours, remainder = divmod(diff_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            sign = "diferencia" if diff.total_seconds() > 0 else "diferencia"
+            diff_text = (
+                f"La hora local tiene una {sign} de "
+                f"{int(hours)}h {int(minutes)}m {seconds:.3f}s respecto a {tzname}."
+            )
+
+            # --- MODIFICACIÓN ---
+            # Se eliminaron las líneas que sobrescribían la variable 'diff_text'
+            # para conservar los segundos y milisegundos.
+            
+            # Mostrar por consola
+            tz_label = getattr(dt_local.tzinfo, "key", str(dt_local.tzinfo) or "Local")
+            print(f"[INFO] Hora local: {fmt_es(dt_local, tz_label)}")
+            print(f"[INFO] Hora remota: {fmt_es(dt_remote_local, tzname)}")
+            print(f"[INFO] Diferencia: {diff_text}")
+
+            # Enviar al chat
+            return f"🕒 {fmt_es(dt_remote_local, tzname)}\n{diff_text}"
         except Exception as e:
             print(f"[ERROR API] {url} -> {e}")
 
-    # 3) Fallback sin red usando tz de sistema
+    # Fallback sin red
     try:
         tz = ZoneInfo(TZ_MAIN)
         dt_local = datetime.now(tz)
-        return fmt_es(dt_local, TZ_MAIN) + " (sin API)"
+        return f"Hora local (sin API): {fmt_es(dt_local, TZ_MAIN)}"
     except Exception as e:
         print(f"[ERROR Fallback] zoneinfo -> {e}")
-        return "Error: No se pudo obtener la hora de Puerto Vallarta."
+        return "Error: No se pudo obtener la hora."
+
 
 
 LOCAL_IP = get_local_ip()

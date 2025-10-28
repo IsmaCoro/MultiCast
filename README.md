@@ -30,6 +30,12 @@ python -u .\MultiCast.py
 
 ---
 
+https://rpg-finally-holds-hopkins.trycloudflare.com/index.html?ws_host=exceptional-searched-winning-slope.trycloudflare.com&ws_port=443
+
+https://(rpg-finally-holds-hopkins).trycloudflare.com
+
+https://(exceptional-searched-winning-slope).trycloudflare.com
+
 ## 🧩 Armar el enlace final (fórmula)
 ⚠️ El orden importa:  
 - La URL del **puerto 8000 (HTTP)** va al inicio.  
