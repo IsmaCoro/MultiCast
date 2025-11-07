@@ -97,7 +97,6 @@ function displayMessage(fullMessage) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// ====== Registro obligatorio ======
 function validateNickname(name) {
   if (!name) return false;
   const trimmed = name.trim();
@@ -106,6 +105,7 @@ function validateNickname(name) {
   return true;
 }
 
+// ====== Registro obligatorio ======
 function showRegistration(msg = 'Regístrate para entrar') {
   regBackdrop.hidden = false;
   regBackdrop.style.display = 'grid';
@@ -127,14 +127,16 @@ function closeRegistration() {
   }, 50);
 }
 
+// ESTE ES EL NUEVO BLOQUE COMPLETO (PÉGALO AQUÍ):
 function completeRegistration(name) {
   nickname = name.trim();
   registered = true;
-  if (rememberBox?.checked) {
-    localStorage.setItem('chat_nickname', nickname);
-  } else {
-    localStorage.removeItem('chat_nickname');
-  }
+  
+  // ¡CAMBIO IMPORTANTE!
+  // Siempre guardamos el alias, sin importar la casilla.
+  localStorage.setItem('chat_nickname', nickname);
+  if (rememberBox) rememberBox.checked = true; // Sincroniza la casilla
+
   meNameEl.textContent = nickname;
   meInitialsEl.textContent = nickname.trim().charAt(0).toUpperCase() || 'U';
   closeRegistration();
@@ -142,32 +144,41 @@ function completeRegistration(name) {
   connect();
 }
 
-// Intento reanudar sesión: NO auto-registra. Solo pre-rellena si existía.
+// Intento reanudar sesión: AUTO-REGISTRA si el alias guardado es válido.
 (function initRegistration() {
-  const stored = localStorage.getItem('chat_nickname');
-  if (stored) {
-    if (regNameInput) regNameInput.value = stored;
-    // crea la casilla recordar si no existe
-    if (!rememberBox) {
-      const cb = document.createElement('label');
-      cb.style.display = 'flex'; cb.style.alignItems = 'center'; cb.style.gap = '8px';
-      cb.innerHTML = '<input type="checkbox" id="reg-remember"> Recordarme en este navegador';
-      regForm?.insertBefore(cb, regForm.querySelector('button'));
-      rememberBox = cb.querySelector('input');
-      rememberBox.checked = true; // si ya había alias guardado, marcamos
-    }
-  } else {
-    // crear casilla si no existe
-    if (!rememberBox) {
-      const cb = document.createElement('label');
-      cb.style.display = 'flex'; cb.style.alignItems = 'center'; cb.style.gap = '8px';
-      cb.innerHTML = '<input type="checkbox" id="reg-remember"> Recordarme en este navegador';
-      regForm?.insertBefore(cb, regForm.querySelector('button'));
-      rememberBox = cb.querySelector('input');
-      rememberBox.checked = false;
-    }
+  // Asegurarnos que el checkbox exista primero
+  if (!rememberBox) {
+    const cb = document.createElement('label');
+    cb.style.display = 'flex'; cb.style.alignItems = 'center'; cb.style.gap = '8px';
+    cb.innerHTML = '<input type="checkbox" id="reg-remember"> Recordarme en este navegador';
+    regForm?.insertBefore(cb, regForm.querySelector('button'));
+    rememberBox = cb.querySelector('input');
   }
-  showRegistration();
+
+  const stored = localStorage.getItem('chat_nickname');
+
+  // ¡AQUÍ ESTÁ LA MAGIA!
+  // Si encontramos un alias guardado Y es válido...
+  if (stored && validateNickname(stored)) {
+    // Rellenamos los campos (aunque el modal no se verá)
+    if (regNameInput) regNameInput.value = stored;
+    rememberBox.checked = true;
+    
+    // ...¡simplemente completamos el registro y conectamos!
+    console.log('Alias válido encontrado, reanudando sesión:', stored);
+    completeRegistration(stored);
+  } else {
+    // Si no hay alias guardado (o era inválido)...
+    if (stored) {
+      // Limpiamos un posible alias inválido
+      localStorage.removeItem('chat_nickname');
+    }
+    rememberBox.checked = false;
+    
+    // ...mostramos el modal de registro como antes.
+    console.log('No se encontró alias válido, mostrando modal.');
+    showRegistration();
+  }
 })();
 
 regForm?.addEventListener('submit', (e) => {

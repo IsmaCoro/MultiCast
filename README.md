@@ -23,6 +23,7 @@ python -u .\MultiCast.py
 
 & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8000 2>&1 | Select-String -Pattern 'https://.*trycloudflare\.com' -AllMatches
 
+"C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8000
 
 ### 2️⃣ Túnel WebSocket (puerto 8080)
 
