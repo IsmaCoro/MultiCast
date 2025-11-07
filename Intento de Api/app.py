@@ -81,6 +81,9 @@ def fotos(filename):
 
 # Ruta Para la Api GET (Mostrar unicamente los datos de la pagina)
 
+#CRUDO
+
+"""
 @app.route("/api/usuarios", methods=["GET"])
 def api_obtener_usuarios():
     conn = get_connection()
@@ -102,7 +105,7 @@ def api_obtener_usuarios():
 
     conn.close()
     return jsonify(usuarios)
-
+"""
 # Dejar de moomento esta ruta que solo muestra a los usuarios en una lista en formato de JSON
 #
 #
@@ -184,6 +187,6 @@ if __name__ == "__main__":
     print("Servidor iniciado en http://localhost:5000")
     print("Rutas disponibles:")
     print("  - http://localhost:5000/ (Vista web con imágenes)")
-    print("   - http://localhost:5000/api/usuarios GET (Obtener usuarios en JSON)")
+    """print("   - http://localhost:5000/api/usuarios GET (Obtener usuarios en JSON)")"""
     print("   - http://localhost:5000/admin (Interfaz de administración)")
     app.run(debug=True, host='0.0.0.0', port=5000)

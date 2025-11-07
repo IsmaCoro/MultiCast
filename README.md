@@ -2,6 +2,7 @@
 
 ## Dependencias
 pip install websockets requests
+pip install mariadb
 
 ## Instalar Cloudflare Tunnel
 winget install Cloudflare.cloudflared
