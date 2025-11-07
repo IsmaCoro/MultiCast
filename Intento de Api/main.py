@@ -3,10 +3,10 @@ import sys
 
 try:
     conn = mariadb.connect(
-        user="root",
-        password="admin665",
-        host="localhost",
-        port=3307,  
+        user="dbpgf20750609",
+        password="crm99QaeqVsrXo5Hm~8XH1yj",
+        host="serverless-us-east4.sysp0000.db2.skysql.com",
+        port=4050,
         database="Senores"
     )
 

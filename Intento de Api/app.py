@@ -12,11 +12,14 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # Confuguracion para el peso
 def get_connection():
     try:
         return mariadb.connect(
-            user="root",
-            password="admin665",
-            host="localhost",
-            port=3307,
-            database="Senores"
+            user="dbpgf20750609",
+            password="crm99QaeqVsrXo5Hm~8XH1yj",
+            host="serverless-us-east4.sysp0000.db2.skysql.com",
+            port=4050,
+            database="Senores",
+            ssl=True,
+            ssl_verify_cert=False,
+            ssl_ca="/path/to/skysql_chain_2023.pem"
         )
     except mariadb.Error as e:
         print(f"Error de conexión: {e}")
