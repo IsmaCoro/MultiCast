@@ -370,3 +370,55 @@ body {
   .brand h1 { font-size: 16px; }
   .subtitle { display: none; }
 }
+
+/* Estilo para el contenedor "cápsula" */
+    .capsule-container {
+        display: flex;
+        border: 1px solid #ccc;
+        border-radius: 25px; /* Esto da el look de cápsula */
+        overflow: hidden; /* Asegura que los hijos no se salgan de los bordes redondos */
+        width: 300px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    /* Estilo para el campo de texto dentro de la cápsula */
+    .capsule-container input {
+        flex-grow: 1; /* Ocupa el espacio disponible */
+        border: none;
+        outline: none;
+        padding: 10px 15px;
+        font-size: 16px;
+    }
+
+    /* Estilo para el botón dentro de la cápsula */
+    .capsule-container button {
+        border: none;
+        background-color: #007bff; /* Color azul */
+        color: white;
+        padding: 0 15px; /* Ajusta el padding para el ícono */
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .capsule-container button:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-blanco-discreto {
+    /* --- Apariencia base (Blanco) --- */
+    background-color: #ffffff; /* Fondo blanco */
+    color: #333333;           /* Texto oscuro para contraste */
+    border: 1px solid #cccccc; /* Borde gris muy claro */
+
+    /* --- Estilo y Espaciado --- */
+    padding: 10px 18px;        /* Espaciado interno (arriba/abajo | izquierda/derecha) */
+    font-size: 16px;           /* Tamaño de letra legible */
+    font-weight: 600;          /* Un toque de "estilo" (semi-negrita) */
+    border-radius: 5px;        /* Esquinas sutilmente redondeadas */
+    cursor: pointer;           /* Muestra la manita al pasar el cursor */
+    outline: none;             /* Quita el borde azul feo al hacer clic (en algunos nav.) */
+
+    /* --- Discreción (Transiciones) --- */
+    transition: all 0.2s ease-in-out; /* Transición suave para todos los efectos */
+}

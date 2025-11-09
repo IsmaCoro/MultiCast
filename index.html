@@ -70,9 +70,18 @@
       </form>
     </main>
 
-    <button onclick="window.location.href=' http://localhost:5000/';"> Ir al enlace </button>
-    <button onclick="window.location.href='http://localhost:5000/api/usuarios';"> Ir al enlace </button>
-    <button onclick="window.location.href='http://localhost:5000/admin';"> Ir al enlace </button>
+<div id="login-section" class="capsule-container">
+    <input type="password" id="password-input" placeholder="Clave de admin...">
+    <button id="unlock-button">🔑</button>
+</div>
+
+<div id="admin-button-container" style="display: none; margin-top: 10px;">
+  <button onclick="window.open('http://localhost:5000/admin', '_blank');">
+    Abrir Admin de Usuarios
+  </button>
+</div>
+
+  <script src="script.js"></script>
   </div>
 </body>
 </html>

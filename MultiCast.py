@@ -13,6 +13,8 @@ from socketserver import TCPServer
 import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import app as user_crud_app  # Importar la api Flask desde app.py
+
 
 
 # ----------------- Utilidades -----------------
@@ -323,6 +325,22 @@ def start_static_http_server(directory: str, host: str = HTTP_HOST, port: int = 
         print(f"Servidor HTTP estático en http://{LOCAL_IP}:{port}/ (sirviendo {directory})")
         httpd.serve_forever()
 
+# ----------------- FLASK CRUD (hilo) - NUEVO -----------------
+def start_flask_server():
+    """Ejecuta el servidor Flask (app.py) en el puerto 5000."""
+    try:
+        print(f"[INFO] Iniciando servidor Flask (CRUD) en http://{LOCAL_IP}:5000/")
+        # Usamos debug=False porque es más estable al correr en un hilo
+        user_crud_app.app.run(debug=False, host='0.0.0.0', port=5000)
+    except Exception as e:
+        print(f"[ERROR Flask] No se pudo iniciar el servidor CRUD: {e}")
+
+def start_flask_thread():
+    """Inicia el hilo para el servidor Flask."""
+    t = threading.Thread(target=start_flask_server, daemon=True)
+    t.start()
+    return t
+
 # ----------------- Arranque -----------------
 def start_http_thread(project_dir: str):
     t = threading.Thread(target=start_static_http_server, args=(project_dir, HTTP_HOST, HTTP_PORT), daemon=True)
@@ -344,6 +362,8 @@ async def main_async():
 
     start_multicast_thread()
 
+    start_flask_thread()
+
     browser_ip = "localhost" if USE_LOCALHOST else LOCAL_IP
     url = f"http://{browser_ip}:{HTTP_PORT}/index.html"
     print(f"Abriendo navegador: {url}")
@@ -357,6 +377,8 @@ async def main_async():
 
     async with websockets.serve(websocket_handler, WS_HOST, WS_PORT):
         await asyncio.Event().wait()
+
+
 
 if __name__ == "__main__":
     try:
