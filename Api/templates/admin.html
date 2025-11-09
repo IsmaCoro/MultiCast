@@ -128,37 +128,14 @@
             </form>
         </div>
 
-<!-- ESTO ES LA SECCION DONDE SE MUESTRA EL JASON CHICOS LOS DATOS EN LISTA-->
-    
-        <div class="json-section">
-            <h2> Datos en JSON</h2>
-            <div class="json-display" id="jsonDisplay">
-{{ usuarios | tojson(indent=2) }}
-            </div>
-        </div>
-    </div>
-
- 
             <!-- Esto es una vista previa lo que hace es mostrar la informacion de los usuarios junto que las imagenes (esto de forma bonita) -->
              
-    <div style="margin-top: 30px;">
-        <h2>👥 Vista Previa de Usuarios</h2>
-        <div id="userPreview">
-            {% for usuario in usuarios %}
-            <div class="user-card">
-                <h3>{{ usuario.nombre }} {{ usuario.apellidos }}</h3>
-                <p><strong>Código:</strong> {{ usuario.codigo_estudiante }}</p>
-                <p><strong>CURP:</strong> {{ usuario.curp }}</p>
-                <p><strong>Dirección:</strong> {{ usuario.calle }}</p>
-                {% if usuario.ruta_foto %}
-                <img class="user-image" 
-                     <img src="{{ usuario.ruta_foto }}" alt="Foto de {{ usuario.nombre }}">
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
 
+<a href="/Info">Ir a la Página de Info</a>
+
+<a onclick="window.location.href = 'http://localhost:8000/';">
+  Ir al Multicast
+</a>
 
     <!-- hASTA AQUI ES LA vISUALIZACION CHICOS  DEL jason -->
 

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory, render_template, request, redirect, url_for
+from flask import Flask, jsonify, send_from_directory, render_template, request, redirect, url_for, flash
 import mariadb
 import os
 # Se eliminaron shutil y Path, ya que no se guardarán archivos
@@ -55,6 +55,36 @@ def index():
     conn.close()
     return render_template('usuarios.html', usuarios=usuarios)
 
+@app.route("/Info")
+def show_info_page():
+    conn = get_connection()
+    if conn is None:
+        return "Error de conexión a la base de datos"
+    
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto FROM usuarios")
+    
+    columns = [desc[0] for desc in cursor.description]
+    usuarios = []
+    
+    for row in cursor.fetchall():
+        usuario_dict = dict(zip(columns, row))
+        
+        # --- Lógica para manejar URL externa vs. archivo local ---
+        foto_path = usuario_dict.get('ruta_foto')
+        if foto_path:
+            # Si NO es una URL completa, usa url_for para la ruta local
+            if not (foto_path.startswith('http://') or foto_path.startswith('https://')):
+                usuario_dict['ruta_foto'] = url_for('fotos', filename=foto_path)
+        # Si es una URL completa (http/https), se deja como está
+        
+        usuarios.append(usuario_dict)
+    
+    conn.close()
+    
+    # Apunta al nuevo template que acabamos de crear
+    return render_template('VerInfo.html', usuarios=usuarios)
+
 
 # Ruta Para API mueestra los Usuraior en un fomulario JSON Pero para editarlos utiliza HTML
 @app.route("/admin")
@@ -71,16 +101,7 @@ def admin():
     
     for row in cursor.fetchall():
         usuario_dict = dict(zip(columns, row))
-        
-        # --- MODIFICACIÓN PARA VISUALIZACIÓN ---
-        # Determinar si la ruta_foto es una URL externa o un archivo local
-        foto_path = usuario_dict.get('ruta_foto')
-        if foto_path:
-            if not (foto_path.startswith('http://') or foto_path.startswith('https://')):
-                # Es un archivo local (antiguo), construir URL con url_for
-                usuario_dict['ruta_foto'] = url_for('fotos', filename=foto_path)
-        # Si es una URL completa (http/https), se deja como está
-        # --- FIN DE MODIFICACIÓN ---
+
         
         usuarios.append(usuario_dict)
     
@@ -98,10 +119,6 @@ def fotos(filename):
         return "Imagen no encontrada", 404
     
 
-# Ruta Para la Api GET (Mostrar unicamente los datos de la pagina)
-# ... (Código comentado se mantiene igual) ...
-
-
 # Ruta pra la API POS (Agregación de Usuarios jijiji)
 @app.route("/api/usuarios/web", methods=["POST"])
 def api_agregar_usuario_web():
@@ -113,7 +130,6 @@ def api_agregar_usuario_web():
         curp = request.form.get('curp')
         calle = request.form.get('calle')
         
-        # --- INICIO DE MODIFICACIÓN ---
         # Obtener la URL de la imagen desde el formulario
         foto_url = request.form.get('foto_url')
 
@@ -123,11 +139,7 @@ def api_agregar_usuario_web():
         
         # La ruta_foto AHORA es la URL directa
         ruta_foto = foto_url 
-        
-        # --- Se elimina toda la lógica de request.files, validación de archivos y generación de nombre ---
-        
-        # --- FIN DE MODIFICACIÓN ---
-
+    
         conn = get_connection()
         if conn is None:
             return jsonify({"error": "Error de conexión a la base de datos"}), 500
@@ -145,9 +157,8 @@ def api_agregar_usuario_web():
             INSERT INTO usuarios (nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto))
-        
+    
         conn.commit()
-        
         # --- INICIO DE MODIFICACIÓN ---
         # Se elimina toda la sección de "Guardar la imagen" (file.save)
         # --- FIN DE MODIFICACIÓN ---

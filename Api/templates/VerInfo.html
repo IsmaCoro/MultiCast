@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Información de Usuarios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .user-card {
+            border: 1px solid #ddd;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .user-image {
+            width: 100px;  /* Ancho fijo */
+            height: 100px; /* Alto fijo */
+            border-radius: 50%; /* Imagen redonda */
+            border: 2px solid #eee;
+            object-fit: cover; /* Asegura que la imagen no se distorsione */
+            flex-shrink: 0;
+            background-color: #f0f0f0; /* Color de fondo por si la imagen es transparente */
+        }
+        .user-image-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 12px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .user-details {
+            flex-grow: 1;
+        }
+        .user-card h3 {
+            margin: 0 0 10px 0;
+            color: #0056b3;
+        }
+        .user-card p {
+            margin: 5px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>👥 Información de Usuarios Registrados</h1>
+    
+    <div id="userPreview">
+        
+        <!-- Bucle de Jinja2 para mostrar cada usuario -->
+        {% for usuario in usuarios %}
+        <div class="user-card">
+            
+            <!-- Imagen del Usuario -->
+            <div>
+                {% if usuario.ruta_foto %}
+                    <img class="user-image" 
+                         src="{{ usuario.ruta_foto }}" 
+                         alt="Foto de {{ usuario.nombre }}"
+                         onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='; this.classList.add('user-image-placeholder');"> <!-- Reemplaza con nada si la URL está rota -->
+                {% else %}
+                    <!-- Placeholder si no hay foto -->
+                    <div class="user-image-placeholder">Sin Foto</div>
+                {% endif %}
+            </div>
+            
+            <!-- Detalles del Usuario -->
+            <div class="user-details">
+                <h3>{{ usuario.nombre }} {{ usuario.apellidos }}</h3>
+                <p><strong>Código:</strong> {{ usuario.codigo_estudiante }}</p>
+                <p><strong>CURP:</strong> {{ usuario.curp }}</p>
+                <p><strong>Dirección:</strong> {{ usuario.calle }}</p>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    
+    <a href="/admin">Volver</a>
+
+</body>
+</html>
