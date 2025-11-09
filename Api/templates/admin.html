@@ -77,6 +77,7 @@
         h1, h2 {
             color: #333;
         }
+        /* Estilo para el mensaje de éxito que agregamos */
         .success-message {
             background: #d4edda;
             color: #155724;
@@ -88,9 +89,11 @@
 </head>
 <body>
     <h1> Administración de Usuarios</h1>
+
+    <div id="success-message" class="success-message" style="display: none;">
+        </div>
     
     <div class="container">
-        <!-- Sección del formulario -->
         <div class="form-section">
             <h2> Agregar Nuevo Usuario</h2>
             <form action="/api/usuarios/web" method="POST" enctype="multipart/form-data">
@@ -128,20 +131,29 @@
             </form>
         </div>
 
-            <!-- Esto es una vista previa lo que hace es mostrar la informacion de los usuarios junto que las imagenes (esto de forma bonita) -->
-             
-
-<a href="/Info">Ir a la Página de Info</a>
+            <a href="/Info">Ir a la Página de Info</a>
 
 <a onclick="window.location.href = 'http://localhost:8000/';">
   Ir al Multicast
 </a>
 
-    <!-- hASTA AQUI ES LA vISUALIZACION CHICOS  DEL jason -->
-
-    <!-- Aqui ABAjito comienza el Refresh es decir cuando se agrega un nuevo usuario se hace una recarga en el JSON lo que muestra el nuevo usuario-->
-
     <script>
+        // NUEVO: Revisa si la URL tiene el parámetro ?success=true al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('success')) {
+                const successDiv = document.getElementById('success-message');
+                if (successDiv) {
+                    successDiv.textContent = '¡Usuario agregado exitosamente!';
+                    successDiv.style.display = 'block';
+                    
+                    // Opcional: Limpia la URL para que el mensaje desaparezca si el usuario recarga
+                    window.history.replaceState(null, '', window.location.pathname);
+                }
+            }
+        });
+
+        // Script original para recargar (aunque ya no es necesario con el fetch modificado)
         function refreshPage() {
             setTimeout(() => {
                 window.location.reload();
@@ -159,6 +171,7 @@
             })
             .then(response => {
                 if (response.redirected) {
+                    // Sigue la redirección (que ahora tiene ?success=true)
                     window.location.href = response.url;
                 } else {
                     return response.json();
@@ -168,7 +181,7 @@
                 if (data && data.error) {
                     alert('Error: ' + data.error);
                 } else {
-                    refreshPage();
+                    // Ya no se necesita refreshPage() aquí
                 }
             })
             .catch(error => {

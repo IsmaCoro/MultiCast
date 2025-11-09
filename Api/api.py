@@ -166,7 +166,7 @@ def api_agregar_usuario_web():
         conn.close()
         
         # Redirigir a la página de admin para ver los cambios
-        return redirect(url_for('admin'))
+        return redirect(url_for('admin', success='true'))
         
     except mariadb.Error as e:
         return jsonify({"error": f"Error de base de datos: {e}"}), 500
