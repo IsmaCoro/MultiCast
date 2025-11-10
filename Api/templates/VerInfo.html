@@ -2,101 +2,255 @@
 <html>
 <head>
     <title>Información de Usuarios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --color-primary: #007bff;
+            --color-secondary: #6c757d;
+            --color-light: #f8f9fa;
+            --color-dark: #343a40;
+            --color-background: #e9ecef;
+            --color-shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-dark);
+            margin: 0;
+            padding: 28px;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
         }
+
         h1 {
-            color: #333;
             text-align: center;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
+            color: black;
+            margin-bottom: 24px;
+            font-weight: 700;
+            font-size: 1.6rem;
         }
-        .user-card {
-            border: 1px solid #ddd;
-            padding: 15px 20px;
-            margin: 15px 0;
-            border-radius: 8px;
-            background: #ffffff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+
+        a.back-link {
+            display: inline-block;
+            margin: 8px 0 18px;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        a.back-link:hover { text-decoration: underline; }
+
+        /* Grid */
+        .usuarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 18px;
+        }
+
+        .usuario-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 6px 18px var(--color-shadow);
             display: flex;
-            align-items: center;
-            gap: 20px;
+            gap: 14px;
+            align-items: flex-start;
+            transition: transform .18s ease, box-shadow .18s ease;
         }
-        .user-image {
-            width: 100px;  /* Ancho fijo */
-            height: 100px; /* Alto fijo */
-            border-radius: 50%; /* Imagen redonda */
-            border: 2px solid #eee;
-            object-fit: cover; /* Asegura que la imagen no se distorsione */
-            flex-shrink: 0;
-            background-color: #f0f0f0; /* Color de fondo por si la imagen es transparente */
+
+        .usuario-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 18px 40px rgba(16,24,40,0.08);
         }
-        .user-image-placeholder {
-            width: 100px;
-            height: 100px;
+
+        .user-image, .user-image-placeholder {
+            width: 96px;
+            height: 96px;
             border-radius: 50%;
-            background: #eee;
+            overflow: hidden;
+            flex-shrink: 0;
+            background-color: #f0f0f0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #aaa;
-            font-size: 12px;
+            border: 2px solid #eef2f7;
+        }
+
+        .user-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 50%;
+        }
+
+        .user-image-placeholder {
+            color: var(--color-secondary);
+            font-size: 13px;
             text-align: center;
-            flex-shrink: 0;
+            padding: 6px;
         }
+
         .user-details {
-            flex-grow: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
-        .user-card h3 {
-            margin: 0 0 10px 0;
-            color: #0056b3;
+
+        .user-details h3 {
+            margin: 0;
+            color: var(--color-dark);
+            font-size: 1.05rem;
         }
-        .user-card p {
-            margin: 5px 0;
-            color: #555;
+
+        .meta-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: var(--color-secondary);
+            font-size: 0.95rem;
+        }
+
+        .datos-usuario {
+            margin-top: 6px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 6px 12px;
+            align-items: start;
+            color: var(--color-secondary);
+            font-size: 0.95rem;
+        }
+
+        .datos-usuario strong {
+            color: var(--color-primary);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .valor-ajustado {
+            color: var(--color-dark);
+            word-break: break-word;
+            font-weight: 500;
+        }
+
+        /* File path */
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-path-container {
+            max-width: 100%;
+        }
+
+        .file-path-text {
+            display: inline-block;
+            cursor: pointer;
+            color: var(--color-dark);
+            font-weight: 500;
+            padding: 6px 8px;
+            border-radius: 8px;
+            text-decoration: none; /* no underline */
+        }
+
+        .file-path-text.truncated {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+            display: inline-block;
+        }
+
+        .file-path-text.expanded {
+            white-space: normal;
+            word-break: break-all;
+        }
+
+        .file-path-text:hover { background: rgba(0,123,255,0.06); color: var(--color-primary); }
+
+        .card-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ver-foto {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .ver-foto:hover { text-decoration: underline; }
+
+        @media (max-width: 520px) {
+            .usuario-card { flex-direction: column; align-items: center; text-align: center; }
+            .datos-usuario { grid-template-columns: 1fr; text-align: center; }
+            .file-path-text.truncated { max-width: 100%; }
         }
     </style>
 </head>
 <body>
     <h1>👥 Información de Usuarios Registrados</h1>
-    
-    <div id="userPreview">
-        
-        <!-- Bucle de Jinja2 para mostrar cada usuario -->
+
+    <a class="back-link" href="/admin">← Volver</a>
+
+    <div class="usuarios-grid" id="userPreview">
         {% for usuario in usuarios %}
-        <div class="user-card">
-            
-            <!-- Imagen del Usuario -->
-            <div>
+        <div class="usuario-card">
+            <div class="user-image" aria-hidden="true">
                 {% if usuario.ruta_foto %}
-                    <img class="user-image" 
-                         src="{{ usuario.ruta_foto }}" 
+                    <img src="{{ usuario.ruta_foto }}"
                          alt="Foto de {{ usuario.nombre }}"
-                         onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='; this.classList.add('user-image-placeholder');"> <!-- Reemplaza con nada si la URL está rota -->
+                         onerror="this.style.display='none'; this.parentElement.classList.add('user-image-placeholder'); this.parentElement.textContent='Sin Foto'; console.warn('Error cargando imagen: {{ usuario.ruta_foto }}');">
                 {% else %}
-                    <!-- Placeholder si no hay foto -->
                     <div class="user-image-placeholder">Sin Foto</div>
                 {% endif %}
             </div>
-            
-            <!-- Detalles del Usuario -->
+
             <div class="user-details">
                 <h3>{{ usuario.nombre }} {{ usuario.apellidos }}</h3>
-                <p><strong>Código:</strong> {{ usuario.codigo_estudiante }}</p>
-                <p><strong>CURP:</strong> {{ usuario.curp }}</p>
-                <p><strong>Dirección:</strong> {{ usuario.calle }}</p>
-            </div>
 
+                <div class="meta-row">
+                    <div class="sub"><strong>Código:</strong>&nbsp;<span class="valor-ajustado">{{ usuario.codigo_estudiante }}</span></div>
+                    <div class="sub"><strong>CURP:</strong>&nbsp;<span class="valor-ajustado">{{ usuario.curp }}</span></div>
+                </div>
+
+                <div class="datos-usuario" aria-live="polite">
+                    <strong>Dirección</strong><div class="valor-ajustado">{{ usuario.calle }}</div>
+
+                    <strong>Archivo</strong>
+                    <div class="file-row">
+                        <span class="file-path-container">
+                            <span
+                                class="file-path-text truncated"
+                                onclick="toggleText(this)"
+                                title="{{ usuario.ruta_foto | default('N/A', true) }}">
+                                {{ usuario.ruta_foto | default('N/A', true) }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                    {% if usuario.ruta_foto %}
+                        <a class="ver-foto" href="{{ usuario.ruta_foto }}" target="_blank" rel="noopener noreferrer">Ver imagen completa</a>
+                    {% else %}
+                        <span style="color:var(--color-secondary); font-style:italic;">Sin foto disponible</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>
-    
-    <a href="/admin">Volver</a>
 
+    {% if not usuarios %}
+        <p class="no-usuarios">No hay usuarios registrados en el sistema.</p>
+    {% endif %}
 </body>
 </html>

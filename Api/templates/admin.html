@@ -1,144 +1,206 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Administración de Usuarios</title>
+    <title>⚙️ Administración de Usuarios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* --- Variables y Estilos Base --- */
+        :root {
+            --color-primary: #63a8ff; /* Azul primario */
+            --color-primary-dark: #08e5ff;
+            --color-bg: #fffbf3; /* Fondo muy claro */
+            --color-card-bg: #ffffff;
+            --color-text: #333;
+            --color-border: #e0e0e0;
+            --color-success: #28a745;
+            --color-success-bg: #d4edda;
+            --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
             display: flex;
-            gap: 20px;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+            min-height: 100vh;
+            position: relative;
         }
-        .form-section, .json-section {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        /* Título Principal */
+        h1 {
+            color: black;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 2.2em;
         }
-        .form-section {
-            flex: 1;
+
+        /* --- Contenedor Principal (Tarjeta) --- */
+        .admin-card {
+            background: var(--color-card-bg);
+            padding: 30px; /* Reducción de padding de 40px a 30px */
+            border-radius: 15px;
+            box-shadow: var(--shadow-subtle);
+            width: 100%;
+            max-width: 550px;
+            margin-top: 20px;
         }
-        .json-section {
-            flex: 2;
+        
+        /* Título del Formulario */
+        h2 {
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: 1.6em;
+            margin-bottom: 20px; /* Reducción de margen */
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 8px; /* Reducción de padding */
+            text-align: center;
         }
+
+        /* Grupos de campos */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 15px; /* Reducción de margen de 25px a 15px */
         }
+        
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 5px; /* Reducción de margen de 8px a 5px */
+            font-weight: 500;
+            color: var(--color-text);
+            font-size: 0.95em; /* Ligeramente más pequeña */
         }
-        input, button {
+        
+        input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 10px; /* Reducción de padding de 14px a 10px */
+            border: 1px solid var(--color-border);
+            border-radius: 6px; /* Ligeramente menos redondeado */
             box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-        button {
-            background-color: #007bff;
+        
+        input:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+        
+        /* Botón de Submit */
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px; /* Reducción de padding de 15px a 12px */
+            background-color: var(--color-primary);
             color: white;
             border: none;
+            border-radius: 6px; /* Ligeramente menos redondeado */
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1em; /* Ligeramente más pequeño */
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 10px; /* Reducción de margen */
         }
-        button:hover {
-            background-color: #0056b3;
+        
+        button[type="submit"]:hover {
+            background-color: var(--color-primary-dark);
+            transform: translateY(-1px);
         }
-        .json-display {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 15px;
+
+        /* --- Estilos de Navegación (Enlaces) --- */
+        .nav-links {
+            position: absolute; 
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--color-primary);
+            font-weight: 500;
+            padding: 5px 10px;
             border-radius: 5px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            max-height: 600px;
-            overflow-y: auto;
+            transition: background-color 0.2s;
+            font-size: 0.9em; /* Ligeramente más pequeña */
         }
-        .user-card {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            background: #f9f9f9;
+        
+        .nav-links a:hover {
+            background-color: rgba(0, 123, 255, 0.1);
         }
-        .user-image {
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 5px;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        /* Estilo para el mensaje de éxito que agregamos */
+        
+        /* Mensaje de éxito */
         .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            background: var(--color-success-bg);
+            color: var(--color-success);
+            padding: 12px; /* Reducción de padding */
+            border-radius: 8px;
+            margin-bottom: 15px; /* Reducción de margen */
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid #c3e6cb;
+            width: 100%;
+            max-width: 550px;
+            font-size: 0.95em;
         }
     </style>
 </head>
 <body>
-    <h1> Administración de Usuarios</h1>
+    <h1>⚙️ Administración de Usuarios</h1>
+
+    <div class="nav-links">
+        <a href="/Info">Ir a la Página de Info</a>
+        <a onclick="window.location.href = 'http://localhost:8000/';">
+          Ir al Multicast
+        </a>
+    </div>
 
     <div id="success-message" class="success-message" style="display: none;">
-        </div>
+    </div>
     
-    <div class="container">
-        <div class="form-section">
-            <h2> Agregar Nuevo Usuario</h2>
-            <form action="/api/usuarios/web" method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="nombre">Nombre:</label>
-                    <input type="text" id="nombre" name="nombre" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="apellidos">Apellidos:</label>
-                    <input type="text" id="apellidos" name="apellidos" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="codigo_estudiante">Código Estudiante:</label>
-                    <input type="number" id="codigo_estudiante" name="codigo_estudiante" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="curp">CURP:</label>
-                    <input type="text" id="curp" name="curp" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="calle">Dirección:</label>
-                    <input type="text" id="calle" name="calle" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="foto_url">URL de la Foto:</label>
-                    <input type="text" name="foto_url" id="foto_url" required>
-                </div>
-                
-                <button type="submit">Agregar Usuario</button>
-            </form>
-        </div>
-
-            <a href="/Info">Ir a la Página de Info</a>
-
-<a onclick="window.location.href = 'http://localhost:8000/';">
-  Ir al Multicast
-</a>
+    <div class="admin-card">
+        <h2>➕ Agregar Nuevo Usuario</h2>
+        <form action="/api/usuarios/web" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="apellidos">Apellidos:</label>
+                <input type="text" id="apellidos" name="apellidos" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="codigo_estudiante">Código Estudiante:</label>
+                <input type="number" id="codigo_estudiante" name="codigo_estudiante" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="curp">CURP:</label>
+                <input type="text" id="curp" name="curp" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="calle">Dirección:</label>
+                <input type="text" id="calle" name="calle" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="foto_url">URL de la Foto:</label>
+                <input type="text" name="foto_url" id="foto_url" required>
+            </div>
+            
+            <button type="submit">Agregar Usuario</button>
+        </form>
+    </div>
 
     <script>
-        // NUEVO: Revisa si la URL tiene el parámetro ?success=true al cargar la página
+        // FUNCIÓN 1: Revisa si la URL tiene el parámetro ?success=true al cargar la página (MANTENIDO)
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('success')) {
@@ -153,14 +215,14 @@
             }
         });
 
-        // Script original para recargar (aunque ya no es necesario con el fetch modificado)
+        // Script original para recargar (MANTENIDO pero no usado en el fetch)
         function refreshPage() {
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         }
 
-        // Manejar el envío del formulario
+        // FUNCIÓN 2: Manejar el envío del formulario con FETCH (MANTENIDO)
         document.querySelector('form').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -181,7 +243,7 @@
                 if (data && data.error) {
                     alert('Error: ' + data.error);
                 } else {
-                    // Ya no se necesita refreshPage() aquí
+                    // Si el backend no redirige y no hay error, el flujo es ignorado como en el original
                 }
             })
             .catch(error => {

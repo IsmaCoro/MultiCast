@@ -1,59 +1,270 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Usuarios con Imágenes</title>
+    <title>Lista de Usuarios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        .usuario {
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin: 10px;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+        :root {
+            --color-primary: #007bff;
+            --color-secondary: #6c757d;
+            --color-light: #f8f9fa;
+            --color-dark: #343a40;
+            --color-background: #e9ecef;
+            --color-shadow: rgba(0, 0, 0, 0.1);
         }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: black;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        /* Contenedor principal para la lista de usuarios */
+        .usuarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .usuario-card {
+            background-color: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--color-shadow);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s ease;
+            text-align: center; 
+        }
+
+        .usuario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Contenedor que agrupa todo excepto el enlace (footer) */
+        .card-content {
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .perfil-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+            width: 100%;
+        }
+
+        .foto-container {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 10px;
+            box-shadow: 0 0 0 3px var(--color-primary);
+        }
+
         .foto {
-            max-width: 200px;
-            max-height: 200px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 5px;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
+        
+        .nombre-completo {
+            margin: 0;
+            font-size: 1.4em;
+            color: var(--color-dark);
+        }
+
+        /* Datos del usuario */
+        .datos-usuario {
+            align-self: stretch; 
+        }
+        
+        .datos-usuario p {
+            margin: 5px 0;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0 10px; 
+            text-align: left;
+        }
+        
+        .datos-usuario p:nth-child(even) {
+            background-color: var(--color-light); 
+            border-radius: 4px;
+        }
+
+        .datos-usuario strong {
+            color: var(--color-primary);
+            font-weight: 400;
+            flex-shrink: 0;
+            margin-right: 5px;
+        }
+
+        /* Estilo para valores sin truncamiento de ellipsis */
+        .valor-ajustado {
+            word-break: break-all; /* Permite que el texto se ajuste */
+            text-align: left;
+            margin-left: auto;
+            max-width: 60%;
+        }
+
+        /* ---------------------------------------------------- */
+        /* Estilos para el Truncamiento de la URL con Ellipsis */
+        /* ---------------------------------------------------- */
+        .file-path-container {
+            max-width: 60%; 
+            margin-left: auto;
+            text-align: left;
+        }
+
+        .file-path-text {
+            display: inline-block;
+            cursor: pointer;
+            text-decoration: none; /* Eliminado subrayado */
+            color: var(--color-dark); /* Color del texto normal */
+            font-weight: 500;
+        }
+
+        /* Estado por defecto: Truncado con ellipsis */
+        .file-path-text.truncated {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%; /* Es esencial para que el ellipsis funcione */
+        }
+
+        /* Estado expandido: Muestra el texto completo */
+        .file-path-text.expanded {
+            white-space: normal;
+            word-break: break-all; 
+            text-decoration: none; /* Quitamos el subrayado cuando se expande */
+        }
+        /* ---------------------------------------------------- */
+
         .sin-foto {
-            color: #666;
+            color: var(--color-secondary);
             font-style: italic;
+            text-align: center;
+            padding: 10px 0;
+        }
+        
+        .enlace-foto {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+            width: 100%;
+            font-size: 0.85em;
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .enlace-foto:hover {
+            text-decoration: underline;
+        }
+        
+        .no-usuarios {
+            text-align: center;
+            font-size: 1.2em;
+            color: var(--color-secondary);
+            padding: 50px;
         }
     </style>
 </head>
 <body>
-    <h1>🎓 Lista de Usuarios</h1>
+    <h1>🎓 Lista de Usuarios del Sistema</h1>
     
     {% if usuarios %}
+        <div class="usuarios-grid">
         {% for usuario in usuarios %}
-        <div class="usuario">
-            <h3>{{ usuario.nombre }} {{ usuario.apellidos }}</h3>
-            <p><strong>ID:</strong> {{ usuario.id }}</p>
-            <p><strong>Código:</strong> {{ usuario.codigo_estudiante }}</p>
-            <p><strong>CURP:</strong> {{ usuario.curp }}</p>
-            <p><strong>Dirección:</strong> {{ usuario.calle }}</p>
-            <p><strong>Archivo de foto:</strong> {{ usuario.ruta_foto }}</p>
-            
-            {% if usuario.ruta_foto %}
-                <img class="foto" 
-                     src="{{ url_for('fotos', filename=usuario.ruta_foto) }}" 
+            <div class="usuario-card">
+                
+                <div class="card-content">
+                    <div class="perfil-header">                        
+                        <h3 class="nombre-completo">
+                            {{ usuario.nombre }} {{ usuario.apellidos }}
+                        </h3>
+                    </div>
+
+                    <div class="datos-usuario">
+                        <p><strong>ID:</strong> <span class="valor-ajustado">{{ usuario.id }}</span></p>
+                        <p><strong>Código:</strong> <span class="valor-ajustado">{{ usuario.codigo_estudiante }}</span></p>
+                        <p><strong>CURP:</strong> <span class="valor-ajustado">{{ usuario.curp }}</span></p>
+                        <p><strong>Dirección:</strong> <span class="valor-ajustado">{{ usuario.calle }}</span></p>
+                        
+                        <p>
+                            <strong>Archivo:</strong> 
+                            <span class="file-path-container">
+                                <span class="file-path-text truncated" onclick="toggleText(this)">
+                                    {{ usuario.ruta_foto | default('N/A', true) }}
+                                </span>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                {% if usuario.ruta_foto %}
+                    <img class="foto" 
+                     src="{{ usuario.ruta_foto }}" 
                      alt="Foto de {{ usuario.nombre }}"
                      onerror="this.style.display='none'; console.log('Error cargando imagen: {{ usuario.ruta_foto }}')">
                 <br>
                 <small>
-                    <a href="{{ url_for('fotos', filename=usuario.ruta_foto) }}" target="_blank">
+                    <a href="{{ usuario.ruta_foto }}" target="_blank">
                         Ver imagen completa
                     </a>
                 </small>
-            {% else %}
-                <p class="sin-foto">Sin foto disponible</p>
-            {% endif %}
-        </div>
+                {% else %}
+                    <p class="sin-foto enlace-foto" style="border-top: 1px solid #dee2e6; margin-top: 20px;">
+                        Sin foto disponible
+                    </p>
+                {% endif %}
+                
+            </div>
         {% endfor %}
+        </div>
     {% else %}
-        <p>No hay usuarios registrados.</p>
+        <p class="no-usuarios">No hay usuarios registrados en el sistema.</p>
     {% endif %}
+
+    <script>
+        /**
+         * Alterna entre las clases 'truncated' (con ellipsis) y 'expanded' (texto completo).
+         * @param {HTMLElement} element - El elemento <span> al que se hizo click.
+         */
+        function toggleText(element) {
+            if (element.classList.contains('truncated')) {
+                // Si está truncado, lo expandimos
+                element.classList.remove('truncated');
+                element.classList.add('expanded');
+            } else {
+                // Si está expandido, lo volvemos a truncar
+                element.classList.remove('expanded');
+                element.classList.add('truncated');
+            }
+        }
+    </script>
 </body>
 </html>
