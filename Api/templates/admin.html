@@ -154,8 +154,8 @@
 
     <div class="nav-links">
         <a href="/Info">Ir a la Página de Info</a>
-        <a onclick="window.location.href = 'http://localhost:8000/';">
-          Ir al Multicast
+        <a id="multicast-redirect-link" href="#">
+            Ir al Multicast
         </a>
     </div>
 
@@ -195,7 +195,7 @@
     </div>
 
     <script>
-        // FUNCIÓN 1: Revisa si la URL tiene el parámetro ?success=true al cargar la página (MANTENIDO)
+        // FUNCIÓN 1: Revisa si la URL tiene el parámetro ?success=true...
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('success')) {
@@ -204,7 +204,7 @@
                     successDiv.textContent = '¡Usuario agregado exitosamente!';
                     successDiv.style.display = 'block';
                     
-                    // Opcional: Limpia la URL para que el mensaje desaparezca si el usuario recarga
+                    // Opcional: Limpia la URL
                     window.history.replaceState(null, '', window.location.pathname);
                 }
             }
@@ -237,8 +237,6 @@
             .then(data => {
                 if (data && data.error) {
                     alert('Error: ' + data.error);
-                } else {
-                    // Si el backend no redirige y no hay error, el flujo es ignorado como en el original
                 }
             })
             .catch(error => {
@@ -247,5 +245,31 @@
             });
         });
     </script>
+
+    <script>
+        // FUNCIÓN 3: Arreglar el enlace de "Ir al Multicast"
+        document.addEventListener('DOMContentLoaded', function() {
+            const multicastLink = document.getElementById('multicast-redirect-link');
+            if (!multicastLink) return;
+
+            // 1. Leer los parámetros de la URL actual
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // 2. Buscar los parámetros que pasamos desde el chat
+            const chatHost = urlParams.get('chat_host');
+            const wsHost = urlParams.get('ws_host');
+            const adminHost = urlParams.get('admin_host'); // (este ya lo tenemos)
+
+            if (chatHost && wsHost && adminHost) {
+                // 3. Si tenemos todos los parámetros, armamos el enlace maestro
+                const chatUrl = `https://${chatHost}/index.html?ws_host=${wsHost}&ws_port=443&admin_host=${adminHost}`;
+                multicastLink.href = chatUrl;
+            } else {
+                // 4. Si no, usamos el enlace local (fallback)
+                multicastLink.href = 'http://localhost:8000/';
+            }
+        });
+    </script>
+
 </body>
 </html>

@@ -29,14 +29,18 @@ python -u .\MultiCast.py
 
 & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:8080 2>&1 | Select-String -Pattern 'https://.*trycloudflare\.com' -AllMatches
 
+### 2️⃣ Túnel Api (puerto 5000)
 
+"C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:5000
 ---
 
-https://rpg-finally-holds-hopkins.trycloudflare.com/index.html?ws_host=exceptional-searched-winning-slope.trycloudflare.com&ws_port=443
+https://kyle-bra-application-takes.trycloudflare.com/index.html?ws_host=representative-submit-watt-suggests.trycloudflare.com&ws_port=443&admin_host=wash-yard-properties-mississippi.trycloudflare.com
 
-https://(rpg-finally-holds-hopkins).trycloudflare.com
+https://kyle-bra-application-takes.trycloudflare.com     
 
-https://(exceptional-searched-winning-slope).trycloudflare.com
+https://representative-submit-watt-suggests.trycloudflare.com 
+
+https://wash-yard-properties-mississippi.trycloudflare.com 
 
 ## 🧩 Armar el enlace final (fórmula)
 ⚠️ El orden importa:  
