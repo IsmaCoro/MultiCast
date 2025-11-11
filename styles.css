@@ -480,33 +480,47 @@ body {
   transform: scale(0.97);
 }
 
-/* Contenedor del botón admin debajo del login */
 #admin-button-container {
   position: fixed;
-  top: 50px; /* un poco debajo del login */
+  top: 14px; /* antes estaba en 60px */
   left: 16px;
-  display: none; /* se muestra al desbloquear */
+  display: none;
   z-index: 99;
 }
 
 #admin-button-container button {
-  background: var(--surface);
-  border: 1px solid rgba(148,163,184,0.25);
-  color: var(--text);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-600) 100%);
+  color: #fff;
   font-weight: 600;
-  padding: 8px 14px;
-  border-radius: 10px;
+  font-size: 15px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 999px;
   cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: all 0.2s ease;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: all 0.25s ease;
+  backdrop-filter: blur(6px);
 }
 
 #admin-button-container button:hover {
-  border-color: var(--brand);
-  color: var(--brand);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  filter: brightness(1.08);
 }
 
 #admin-button-container button:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+#admin-button-container button::before {
+  content: "⚙️ ";
+  font-size: 16px;
+  vertical-align: middle;
 }
