@@ -218,31 +218,7 @@
 
                 <div class="meta-row">
                     <div class="sub"><strong>Código:</strong>&nbsp;<span class="valor-ajustado">{{ usuario.codigo_estudiante }}</span></div>
-                    <div class="sub"><strong>CURP:</strong>&nbsp;<span class="valor-ajustado">{{ usuario.curp }}</span></div>
-                </div>
-
-                <div class="datos-usuario" aria-live="polite">
-                    <strong>Dirección</strong><div class="valor-ajustado">{{ usuario.calle }}</div>
-
-                    <strong>Archivo</strong>
-                    <div class="file-row">
-                        <span class="file-path-container">
-                            <span
-                                class="file-path-text truncated"
-                                onclick="toggleText(this)"
-                                title="{{ usuario.ruta_foto | default('N/A', true) }}">
-                                {{ usuario.ruta_foto | default('N/A', true) }}
-                            </span>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="card-actions">
-                    {% if usuario.ruta_foto %}
-                        <a class="ver-foto" href="{{ usuario.ruta_foto }}" target="_blank" rel="noopener noreferrer">Ver imagen completa</a>
-                    {% else %}
-                        <span style="color:var(--color-secondary); font-style:italic;">Sin foto disponible</span>
-                    {% endif %}
+                    <div class="sub"><strong>Gustos:</strong>&nbsp;<span class="valor-ajustado">{{ usuario.gustos }}</span></div>
                 </div>
             </div>
         </div>

@@ -11,10 +11,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # Configuración para el pes
 def get_connection():
     try:
         return mariadb.connect(
-            user="dbpgf20750609",
-            password="crm99QaeqVsrXo5Hm~8XH1yj",
+            user="dbpgf31079165",
+            password="!pvSxdQ9%RoS0_BN2NWuRgC",
             host="serverless-us-east4.sysp0000.db2.skysql.com",
-            port=4050,
+            port=4090,
             database="Senores",
             ssl=True,
             ssl_verify_cert=False,
@@ -32,7 +32,7 @@ def index():
         return "Error de conexión a la base de datos"
     
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto FROM usuarios")
+    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, ruta_foto, gustos FROM usuarios")
     
     columns = [desc[0] for desc in cursor.description]
     usuarios = []
@@ -62,7 +62,7 @@ def show_info_page():
         return "Error de conexión a la base de datos"
     
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto FROM usuarios")
+    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, ruta_foto, gustos FROM usuarios")
     
     columns = [desc[0] for desc in cursor.description]
     usuarios = []
@@ -94,7 +94,7 @@ def admin():
         return "Error de conexión a la base de datos"
     
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto FROM usuarios")
+    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, ruta_foto, gustos FROM usuarios")
     
     columns = [desc[0] for desc in cursor.description]
     usuarios = []
@@ -127,14 +127,14 @@ def api_agregar_usuario_web():
         nombre = request.form.get('nombre')
         apellidos = request.form.get('apellidos')
         codigo_estudiante = request.form.get('codigo_estudiante')
-        curp = request.form.get('curp')
-        calle = request.form.get('calle')
+        
         
         # Obtener la URL de la imagen desde el formulario
         foto_url = request.form.get('foto_url')
+        gustos = request.form.get('gustos')
 
         # Validar campos requeridos
-        if not all([nombre, apellidos, codigo_estudiante, curp, calle, foto_url]):
+        if not all([nombre, apellidos, codigo_estudiante, foto_url, gustos]):
             return jsonify({"error": "Todos los campos, incluida la URL de la foto, son requeridos"}), 400
         
         # La ruta_foto AHORA es la URL directa
@@ -154,9 +154,9 @@ def api_agregar_usuario_web():
         
         # Insertar en la base de datos (ruta_foto ahora contiene la URL)
         cursor.execute("""
-            INSERT INTO usuarios (nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (nombre, apellidos, codigo_estudiante, curp, calle, ruta_foto))
+            INSERT INTO usuarios (nombre, apellidos, codigo_estudiante, ruta_foto, gustos)
+            VALUES (?, ?, ?, ?, ?)
+        """, (nombre, apellidos, codigo_estudiante, ruta_foto, gustos))
     
         conn.commit()
         # --- INICIO DE MODIFICACIÓN ---
