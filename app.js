@@ -17,6 +17,8 @@ const statusText   = document.getElementById('status-text');
 const meNameEl     = document.getElementById('me-name');
 const meInitialsEl = document.getElementById('me-initials');
 const themeToggle  = document.getElementById('theme-toggle');
+const randomUserBtn = document.getElementById('random-user-btn');
+const userListSelect = document.getElementById('user-list-select');
 const htmlRoot     = document.documentElement;
 
 // Registro (modal)
@@ -32,6 +34,7 @@ let socket;
 let reconnectDelay = 1000;
 let nickname = null;
 let registered = false;
+let userCache = [];
 
 // ====== Tema ======
 const savedTheme = localStorage.getItem('chat_theme') || 'light';
@@ -56,6 +59,104 @@ function setComposerEnabled(enabled) {
   messageInput.disabled = !enabled;
   timeButton.disabled = !enabled;
   sendButton.disabled = !enabled || messageInput.value.trim().length === 0;
+}
+
+function displayUserCard(user) {
+  if (!user) {
+    displayMessage('Sistema: Usuario no encontrado.');
+    return;
+  }
+
+  // 1. Contenedor principal
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('message', 'system', 'user-card');
+
+  // 2. Encabezado (Avatar + Nombre)
+  const header = document.createElement('div');
+  header.classList.add('user-card-header');
+
+  // 3. Avatar (la imagen)
+  const avatar = document.createElement('img');
+  avatar.classList.add('user-card-avatar');
+  avatar.src = user.ruta_foto;
+
+  // Fallback si la imagen no carga
+  avatar.onerror = () => {
+    avatar.style.display = 'none'; // Oculta la imagen rota
+    const fallback = document.createElement('div');
+    fallback.classList.add('user-card-avatar-fallback');
+    // Usa la inicial del nombre
+    fallback.textContent = (user.nombre || 'U').charAt(0).toUpperCase();
+    header.prepend(fallback); // Añade el fallback al inicio
+  };
+  header.appendChild(avatar);
+
+  // 4. Nombre
+  const nameEl = document.createElement('div');
+  nameEl.classList.add('user-card-name');
+  nameEl.textContent = `${user.nombre} ${user.apellidos}`;
+  header.appendChild(nameEl);
+
+  wrapper.appendChild(header); // Añadir encabezado a la tarjeta
+
+  // 5. Cuerpo (Detalles)
+  const body = document.createElement('div');
+  body.classList.add('user-card-body');
+  // Usamos innerHTML para poner los '<strong>' fácilmente
+  body.innerHTML = `
+    <div><strong>Código:</strong> ${user.codigo_estudiante}</div>
+    <div><strong>Gustos:</strong> ${user.gustos}</div>
+  `;
+  wrapper.appendChild(body);
+
+  // 6. Añadir al chat y hacer scroll
+  chatWindow.appendChild(wrapper);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function getAdminApiBase() {
+  const params = new URLSearchParams(location.search);
+  const adminHost = params.get('admin_host');
+  if (adminHost) {
+    return `https://${adminHost}`;
+  }
+  // Fallback para pruebas locales
+  return 'http://localhost:5000';
+}
+
+/**
+ * Busca los usuarios en la API, los guarda en caché y rellena el dropdown
+ */
+async function fetchUsers() {
+  const apiBase = getAdminApiBase();
+  try {
+    const response = await fetch(`${apiBase}/api/usuarios`);
+    if (!response.ok) throw new Error('Error de red');
+
+    const data = await response.json();
+    userCache = data.usuarios || [];
+
+    if (userCache.length > 0) {
+      // Limpiar opciones antiguas
+      userListSelect.innerHTML = '<option value="">Ver Usuario...</option>';
+
+      // Llenar el dropdown
+      userCache.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.id; // Guardamos el ID
+        option.textContent = `${user.nombre} ${user.apellidos}`;
+        userListSelect.appendChild(option);
+      });
+
+      // Habilitar los botones
+      randomUserBtn.disabled = false;
+      userListSelect.disabled = false;
+    }
+
+  } catch (error) {
+    console.error('Error al cargar usuarios:', error);
+    displayMessage('Sistema: No se pudo cargar la lista de usuarios desde la API.');
+  }
 }
 
 function displayMessage(fullMessage) {
@@ -249,6 +350,7 @@ function connect() {
       setStatus('ok', `Conectado como ${nickname}`);
       setComposerEnabled(true);
       closeRegistration();
+      fetchUsers();
       return;
     }
 
@@ -286,4 +388,27 @@ messageForm.addEventListener('submit', (e) => {
   socket.send(txt);
   messageInput.value = '';
   sendButton.disabled = true;
+});
+
+// Listener para el botón de usuario aleatorio
+randomUserBtn.addEventListener('click', () => {
+  if (userCache.length === 0) return;
+
+  // Elegir uno al azar
+  const randomUser = userCache[Math.floor(Math.random() * userCache.length)];
+  displayUserCard(randomUser);
+});
+
+// Listener para el dropdown de usuarios
+userListSelect.addEventListener('change', () => {
+  const selectedId = userListSelect.value;
+  if (!selectedId) return;
+
+  // Buscar el usuario en el caché por su ID
+  const selectedUser = userCache.find(user => user.id == selectedId);
+
+  if (selectedUser) {
+    displayUserCard(selectedUser);
+  }
+  userListSelect.value = "";
 });

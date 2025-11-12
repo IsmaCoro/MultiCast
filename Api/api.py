@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, send_from_directory, render_template, request, redirect, url_for, flash
+from flask_cors import CORS
 import mariadb
 import os
 # Se eliminaron shutil y Path, ya que no se guardarán archivos
 import uuid
 
 app = Flask(__name__)
+CORS(app)
 app.config['UPLOAD_FOLDER'] = 'uploads/fotos'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # Configuración para el peso de la imagen (ya no aplica, pero se deja)
 
@@ -177,6 +179,29 @@ def api_agregar_usuario_web():
 def ensure_upload_folder():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
+
+@app.route("/api/usuarios")
+def api_get_usuarios():
+    """
+    Nuevo endpoint para entregar la lista de usuarios en JSON.
+    """
+    conn = get_connection()
+    if conn is None:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+
+    cursor = conn.cursor()
+    # Traemos todos los datos que queremos mostrar
+    cursor.execute("SELECT id, nombre, apellidos, codigo_estudiante, ruta_foto, gustos FROM usuarios")
+
+    columns = [desc[0] for desc in cursor.description]
+    usuarios = []
+
+    for row in cursor.fetchall():
+        usuarios.append(dict(zip(columns, row)))
+
+    conn.close()
+    # Devolvemos la lista como un JSON
+    return jsonify({"usuarios": usuarios})
 
 if __name__ == "__main__":
     ensure_upload_folder() # Se mantiene por compatibilidad con fotos antiguas

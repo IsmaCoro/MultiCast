@@ -231,8 +231,7 @@ body {
 /* Composer */
 .composer {
   display: grid;
-  grid-template-columns: auto 1fr auto auto; 
-  align-items: center;
+  grid-template-columns: auto 1fr auto auto auto;  align-items: center;
   gap: 10px;
   padding: 12px;
   background: var(--surface);
@@ -523,4 +522,90 @@ body {
   content: "⚙️ ";
   font-size: 16px;
   vertical-align: middle;
+}
+
+/* Estilos para el nuevo select */
+select.ghost-btn {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 1em;
+  padding-right: 30px; /* Espacio para la flecha */
+  padding-left: 10px;
+  font-size: 13px; /* Más pequeño para que quepa */
+  color: var(--muted);
+}
+select.ghost-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* --- Tarjeta de Info de Usuario --- */
+.message.system.user-card {
+  /* El .system ya le da fondo y borde */
+  padding: 12px 16px;
+  width: 90%;
+  max-width: 400px; /* Más ancho que un chat normal */
+  font-style: normal; /* Quitamos la cursiva del .system */
+  background: var(--system);
+  border-color: rgba(148,163,184,0.35);
+}
+
+.user-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(148,163,184,0.35);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.user-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--brand);
+  background-color: var(--surface-2); /* Fondo mientras carga */
+}
+
+.user-card-avatar-fallback {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.user-card-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+  line-break: anywhere;
+}
+
+.user-card-body {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.user-card-body strong {
+  color: var(--text);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Ocultar la lista de usuarios temporalmente */
+#user-list-select {
+  display: none;
 }

@@ -34,7 +34,7 @@ python -u .\MultiCast.py
 "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --url http://localhost:5000
 ---
 
-https://kyle-bra-application-takes.trycloudflare.com/index.html?ws_host=representative-submit-watt-suggests.trycloudflare.com&ws_port=443&admin_host=wash-yard-properties-mississippi.trycloudflare.com
+https://tricks-outsourcing-seeks-establishing.trycloudflare.com/index.html?ws_host=resources-qualifications-senator-shadow.trycloudflare.com&ws_port=443&admin_host=submitting-pictures-assign-qualification.trycloudflare.com
 
 https://kyle-bra-application-takes.trycloudflare.com     
 
@@ -70,3 +70,5 @@ https://star-nine-librarian-roulette.trycloudflare.com/index.html?ws_host=avi-sc
 - Si Cloudflare muestra “Cannot determine default origin certificate path”, ignóralo (es normal sin cuenta).  
 - Si el enlace no carga aún, espera unos segundos y recarga.  
 - Los enlaces generados expiran tras un tiempo, puedes volver a ejecutar los comandos para crear nuevos.
+
+pip install flask-cors

@@ -153,7 +153,7 @@
     <h1>⚙️ Administración de Usuarios</h1>
 
     <div class="nav-links">
-        <a href="/Info">Ir a la Página de Info</a>
+        <a id="info-redirect-link" href="/Info">Ir a la Página de Info</a>
         <a id="multicast-redirect-link" href="#">
             Ir al Multicast
         </a>
@@ -247,29 +247,37 @@
     </script>
 
     <script>
-        // FUNCIÓN 3: Arreglar el enlace de "Ir al Multicast"
+        // FUNCIÓN 3 (Mejorada): Arregla TODOS los enlaces de navegación
         document.addEventListener('DOMContentLoaded', function() {
             const multicastLink = document.getElementById('multicast-redirect-link');
-            if (!multicastLink) return;
+            const infoLink = document.getElementById('info-redirect-link');
 
-            // 1. Leer los parámetros de la URL actual
+            if (!multicastLink || !infoLink) return;
+
+            // 1. Lee los parámetros de la URL actual
             const urlParams = new URLSearchParams(window.location.search);
-            
-            // 2. Buscar los parámetros que pasamos desde el chat
             const chatHost = urlParams.get('chat_host');
             const wsHost = urlParams.get('ws_host');
-            const adminHost = urlParams.get('admin_host'); // (este ya lo tenemos)
+            const adminHost = urlParams.get('admin_host');
 
             if (chatHost && wsHost && adminHost) {
-                // 3. Si tenemos todos los parámetros, armamos el enlace maestro
+                // 2. Si hay parámetros, los usamos
+
+                // Arma el enlace MAESTRO para "Ir al Multicast"
                 const chatUrl = `https://${chatHost}/index.html?ws_host=${wsHost}&ws_port=443&admin_host=${adminHost}`;
                 multicastLink.href = chatUrl;
+
+                // Arma el enlace para "Ir a Info" (solo path + parámetros)
+                // Usamos window.location.search para pasar TODOS los parámetros
+                infoLink.href = `/Info${window.location.search}`;
+
             } else {
-                // 4. Si no, usamos el enlace local (fallback)
+                // 3. Si no hay parámetros (modo local)
                 multicastLink.href = 'http://localhost:8000/';
+                infoLink.href = '/Info';
             }
         });
     </script>
-
+    
 </body>
 </html>

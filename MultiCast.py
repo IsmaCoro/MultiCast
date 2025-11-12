@@ -42,8 +42,8 @@ def test_port(host, port):
 def get_api_time_sync():
     TZ_MAIN = "America/Mexico_City"
     URLS = [
-    "https://timeapi.io/api/Time/current/zone?timeZone=America/Mexico_City",
-    "https://timeapi.io/api/Time/current/zone?timeZone=America/Bahia_Banderas",
+    "https://worldtimeapi.org/api/timezone/America/Mexico_City",
+    "https://worldtimeapi.org/api/timezone/America/Bahia_Banderas",
     ]
 
     SP_MONTHS = ["enero","febrero","marzo","abril","mayo","junio",
@@ -57,7 +57,7 @@ def get_api_time_sync():
 
     for url in URLS:
         try:
-            r = requests.get(url, timeout=5)
+            r = requests.get(url, timeout=15)
             r.raise_for_status()
             data = r.json()
             
