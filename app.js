@@ -87,7 +87,7 @@ function displayUserCard(user) {
     fallback.classList.add('user-card-avatar-fallback');
     // Usa la inicial del nombre
     fallback.textContent = (user.nombre || 'U').charAt(0).toUpperCase();
-    header.prepend(fallback); // Añade el fallback al inicio
+    header.prepend(fallback);
   };
   header.appendChild(avatar);
 
@@ -97,19 +97,18 @@ function displayUserCard(user) {
   nameEl.textContent = `${user.nombre} ${user.apellidos}`;
   header.appendChild(nameEl);
 
-  wrapper.appendChild(header); // Añadir encabezado a la tarjeta
+  wrapper.appendChild(header); 
 
   // 5. Cuerpo (Detalles)
   const body = document.createElement('div');
   body.classList.add('user-card-body');
-  // Usamos innerHTML para poner los '<strong>' fácilmente
+
   body.innerHTML = `
     <div><strong>Código:</strong> ${user.codigo_estudiante}</div>
     <div><strong>Gustos:</strong> ${user.gustos}</div>
   `;
   wrapper.appendChild(body);
 
-  // 6. Añadir al chat y hacer scroll
   chatWindow.appendChild(wrapper);
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
@@ -120,13 +119,10 @@ function getAdminApiBase() {
   if (adminHost) {
     return `https://${adminHost}`;
   }
-  // Fallback para pruebas locales
+
   return 'http://localhost:5000';
 }
 
-/**
- * Busca los usuarios en la API, los guarda en caché y rellena el dropdown
- */
 async function fetchUsers() {
   const apiBase = getAdminApiBase();
   try {
@@ -140,7 +136,6 @@ async function fetchUsers() {
       // Limpiar opciones antiguas
       userListSelect.innerHTML = '<option value="">Ver Usuario...</option>';
 
-      // Llenar el dropdown
       userCache.forEach(user => {
         const option = document.createElement('option');
         option.value = user.id; // Guardamos el ID
@@ -222,26 +217,22 @@ function closeRegistration() {
   // opcional: elimina del DOM para que no interfiera con clics
   setTimeout(() => {
     if (regBackdrop && regBackdrop.parentNode) {
-      // comentar si prefieres mantener en DOM
-      // regBackdrop.parentNode.removeChild(regBackdrop);
     }
   }, 50);
 }
 
-// ESTE ES EL NUEVO BLOQUE COMPLETO (PÉGALO AQUÍ):
 function completeRegistration(name) {
   nickname = name.trim();
   registered = true;
   
-  // ¡CAMBIO IMPORTANTE!
   // Siempre guardamos el alias, sin importar la casilla.
   localStorage.setItem('chat_nickname', nickname);
-  if (rememberBox) rememberBox.checked = true; // Sincroniza la casilla
+  if (rememberBox) rememberBox.checked = true;
 
   meNameEl.textContent = nickname;
   meInitialsEl.textContent = nickname.trim().charAt(0).toUpperCase() || 'U';
   closeRegistration();
-  setComposerEnabled(false); // se habilita tras handshake OK
+  setComposerEnabled(false); 
   connect();
 }
 
@@ -258,25 +249,22 @@ function completeRegistration(name) {
 
   const stored = localStorage.getItem('chat_nickname');
 
-  // ¡AQUÍ ESTÁ LA MAGIA!
   // Si encontramos un alias guardado Y es válido...
   if (stored && validateNickname(stored)) {
     // Rellenamos los campos (aunque el modal no se verá)
     if (regNameInput) regNameInput.value = stored;
     rememberBox.checked = true;
     
-    // ...¡simplemente completamos el registro y conectamos!
     console.log('Alias válido encontrado, reanudando sesión:', stored);
     completeRegistration(stored);
   } else {
-    // Si no hay alias guardado (o era inválido)...
+    // Si no hay alias guardado (o era inválido)
     if (stored) {
       // Limpiamos un posible alias inválido
       localStorage.removeItem('chat_nickname');
     }
     rememberBox.checked = false;
     
-    // ...mostramos el modal de registro como antes.
     console.log('No se encontró alias válido, mostrando modal.');
     showRegistration();
   }

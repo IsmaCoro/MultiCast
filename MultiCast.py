@@ -87,8 +87,6 @@ def get_api_time_sync():
             )
 
             # --- MODIFICACIÓN ---
-            # Se eliminaron las líneas que sobrescribían la variable 'diff_text'
-            # para conservar los segundos y milisegundos.
             
             # Mostrar por consola
             tz_label = getattr(dt_local.tzinfo, "key", str(dt_local.tzinfo) or "Local")
@@ -132,7 +130,7 @@ USE_LOCALHOST = True
 
 # ----------------- Registro / Sesiones -----------------
 CONNECTED_CLIENTS = set()
-CLIENT_NICKS = {}   # websocket -> nickname
+CLIENT_NICKS = {}
 ACTIVE_NICKS = set()
 
 NICK_RE = re.compile(r"^[A-Za-zÀ-ÿ0-9 _.\-]{3,32}$")
@@ -146,7 +144,7 @@ def is_valid_nick(nick: str) -> bool:
     return True
 
 # ----------------- Deduplicación por eco multicast -----------------
-RECENT_SENT   = {}      # dict[str, float] => {"Nick: texto": timestamp}
+RECENT_SENT   = {}    
 RECENT_WINDOW = 5.0     # ventana de tiempo para considerar eco/duplicado
 
 # ----------------- Helpers de envío -----------------
@@ -194,7 +192,7 @@ async def websocket_handler(websocket):
                     CLIENT_NICKS[websocket] = nickname
                     ACTIVE_NICKS.add(nickname)
                     registered = True
-                    # Token de control + mensaje humano
+                    # Token de control
                     await send_control(websocket, "SYSTEM:REGISTER_OK")
                     await send_system(websocket, f"Registro OK. ¡Bienvenido, {nickname}!")
                     await broadcast_system(f"{nickname} se ha unido al chat.")
@@ -210,7 +208,6 @@ async def websocket_handler(websocket):
                 await broadcast_system(api_response)
                 continue
 
-            # 2) Mensaje normal: el servidor formatea "<nick>: <texto>"
             if msg:
                 full_line = f"{nickname}: {msg}"
                 print(f"[Web -> Multicast]: {full_line}")
@@ -228,7 +225,7 @@ async def websocket_handler(websocket):
                 ttl = struct.pack('b', 1)
                 send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
-                # Evitar eco local de multicast (duplica mensajes en el mismo proceso)
+                # Evitar eco local de multicast
                 try:
                     send_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
                 except OSError:

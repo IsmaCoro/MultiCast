@@ -8,7 +8,7 @@ import uuid
 app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = 'uploads/fotos'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # Configuración para el peso de la imagen (ya no aplica, pero se deja)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 def get_connection():
     try:
@@ -26,7 +26,6 @@ def get_connection():
         print(f"Error de conexión: {e}")
         return None
 
-# Ruta para ver usuarios en HTML (Muestra la informacion de los usuarios junto con su imagen)
 @app.route("/")
 def index():
     conn = get_connection()
@@ -42,15 +41,10 @@ def index():
     for row in cursor.fetchall():
         usuario_dict = dict(zip(columns, row))
         
-        # --- MODIFICACIÓN PARA VISUALIZACIÓN ---
-        # Determinar si la ruta_foto es una URL externa o un archivo local
         foto_path = usuario_dict.get('ruta_foto')
         if foto_path:
             if not (foto_path.startswith('http://') or foto_path.startswith('https://')):
-                # Es un archivo local (antiguo), construir URL con url_for
                 usuario_dict['ruta_foto'] = url_for('fotos', filename=foto_path)
-        # Si es una URL completa (http/https), se deja como está
-        # --- FIN DE MODIFICACIÓN ---
         
         usuarios.append(usuario_dict)
     
@@ -72,23 +66,18 @@ def show_info_page():
     for row in cursor.fetchall():
         usuario_dict = dict(zip(columns, row))
         
-        # --- Lógica para manejar URL externa vs. archivo local ---
         foto_path = usuario_dict.get('ruta_foto')
         if foto_path:
-            # Si NO es una URL completa, usa url_for para la ruta local
             if not (foto_path.startswith('http://') or foto_path.startswith('https://')):
                 usuario_dict['ruta_foto'] = url_for('fotos', filename=foto_path)
-        # Si es una URL completa (http/https), se deja como está
         
         usuarios.append(usuario_dict)
     
     conn.close()
     
-    # Apunta al nuevo template que acabamos de crear
     return render_template('VerInfo.html', usuarios=usuarios)
 
 
-# Ruta Para API mueestra los Usuraior en un fomulario JSON Pero para editarlos utiliza HTML
 @app.route("/admin")
 def admin():
     conn = get_connection()
@@ -111,7 +100,6 @@ def admin():
     return render_template('admin.html', usuarios=usuarios)
 
 
-# Ruta para servir imágenes (Lo que hace es un link que expande la imagen a una pantalla completa)
 # Esta ruta se mantiene para dar soporte a imágenes antiguas que ya estaban subidas
 @app.route("/fotos/<filename>")
 def fotos(filename):
@@ -121,11 +109,9 @@ def fotos(filename):
         return "Imagen no encontrada", 404
     
 
-# Ruta pra la API POS (Agregación de Usuarios jijiji)
 @app.route("/api/usuarios/web", methods=["POST"])
 def api_agregar_usuario_web():
     try:
-        # Esto simplemnete "serian" los campos para agregar los datos
         nombre = request.form.get('nombre')
         apellidos = request.form.get('apellidos')
         codigo_estudiante = request.form.get('codigo_estudiante')
@@ -161,9 +147,6 @@ def api_agregar_usuario_web():
         """, (nombre, apellidos, codigo_estudiante, ruta_foto, gustos))
     
         conn.commit()
-        # --- INICIO DE MODIFICACIÓN ---
-        # Se elimina toda la sección de "Guardar la imagen" (file.save)
-        # --- FIN DE MODIFICACIÓN ---
         
         conn.close()
         
